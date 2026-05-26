@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="沖繩之旅">
+    <meta name="theme-color" content="#E0F7FA">
+    
+    <link rel="apple-touch-icon" href="https://img.icons8.com/color/96/shisa.png">
+    <link rel="icon" type="image/png" href="https://img.icons8.com/color/96/shisa.png">
+
+    <title>沖繩自駕 5天4夜 (全雲端同步版)</title>
+
+    <!-- 外部資源 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #0288D1; 
+            --accent-color: #00BCD4; 
+            --highlight-color: #FF7043;
+            --card-bg: #FFFFFF; 
+            --text-main: #37474F; 
+            --text-secondary: #78909C;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --radius-card: 16px; 
+            --shadow-card: 0 4px 15px rgba(2, 136, 209, 0.08); 
+            --nav-height: 60px;
+            --bg-gradient: linear-gradient(180deg, #FAFAFA 0%, #F5F5F5 40%, #E1F5FE 100%);
+            --nav-bg: rgba(255, 255, 255, 0.9);
+            --input-bg: #FFFFFF;
+            --input-border: #CFD8DC;
+            --heading-color: #01579B;
+            --teal-deep: #00897B;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #4FC3F7;
+            --accent-color: #80DEEA;
+            --highlight-color: #FFAB91;
+            --card-bg: #263238; 
+            --text-main: #ECEFF1;
+            --text-secondary: #B0BEC5;
+            --bg-gradient: linear-gradient(180deg, #102027 0%, #000000 100%);
+            --nav-bg: rgba(38, 50, 56, 0.95);
+            --shadow-card: 0 4px 15px rgba(0, 0, 0, 0.5);
+            --input-bg: #37474F;
+            --input-border: #455A64;
+            --heading-color: #81D4FA;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { overscroll-behavior-y: none; }
+        
+        body {
+            margin: 0; padding: 0; font-family: var(--font-family); 
+            background-image: var(--bg-gradient);
+            background-attachment: fixed; min-height: 100vh; color: var(--text-main);
+            padding-bottom: calc(40px + env(safe-area-inset-bottom));
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+
+        .main-header { position: relative; width: 100%; height: 180px; overflow: hidden; background: #01579B; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        .header-img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.85); }
+        .header-overlay { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); padding: 30px 20px 20px 20px; color: white; z-index: 10; }
+        .header-title { margin: 0; font-size: 24px; font-weight: 800; }
+        .header-date { font-size: 13px; opacity: 0.9; margin-bottom: 5px; font-weight: 500; }
+        .header-badge { background: var(--primary-color); display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; margin-top: 5px; font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+        /* 左上角同步標籤 */
+        #sync-badge { 
+            position: fixed; top: 10px; left: 10px; z-index: 3000;
+            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(5px);
+            padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700;
+            color: var(--primary-color); box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex; align-items: center; gap: 5px;
+        }
+
+        .sticky-nav { 
+            position: sticky; top: 0; width: 100%; height: calc(var(--nav-height) + env(safe-area-inset-top)); 
+            background: var(--nav-bg); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
+            display: flex; justify-content: space-around; align-items: flex-end; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 1000; padding-bottom: 8px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); font-size: 10px; cursor: pointer; transition: 0.2s; text-decoration: none; }
+        .nav-item.active { color: var(--primary-color); font-weight: 700; }
+        .nav-icon { width: 20px; height: 20px; margin-bottom: 3px; fill: currentColor; }
+
+        main { padding: 20px; max-width: 600px; margin: 0 auto; }
+        .view-section { display: none; animation: fadeIn 0.4s ease-out; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card-custom { background: var(--card-bg); border-radius: var(--radius-card); padding: 18px; margin-bottom: 15px; box-shadow: var(--shadow-card); border: 1px solid rgba(255,255,255,0.1); position: relative; }
+        h2.section-title { font-size: 18px; color: var(--heading-color); margin: 25px 0 15px 0; display: flex; align-items: center; gap: 8px; font-weight: 700; }
+
+        .date-tabs { display: flex; gap: 2px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
+        .tab-btn { border: none; background: rgba(0,0,0,0.05); padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; cursor: pointer; transition: all 0.2s; }
+        .tab-btn.active { background: var(--primary-color); color: white; box-shadow: 0 4px 10px rgba(2, 136, 209, 0.3); }
+
+        .time-tag { font-size: 13px; color: var(--primary-color); font-weight: 800; margin-bottom: 4px; display: block; }
+        
+        .btn-okinawa { background: var(--primary-color); color: white; border: none; border-radius: 12px; padding: 12px; font-weight: 700; width: 100%; cursor: pointer; transition: transform 0.1s; }
+        .btn-delete { color: #CFD8DC; background: none; border: none; font-size: 20px; cursor: pointer; padding: 5px; position: absolute; top: 10px; right: 10px; }
+
+        .weather-scroller { display: flex; overflow-x: auto; gap: 12px; padding-bottom: 5px; scrollbar-width: none; }
+        .weather-day-card { flex: 0 0 85px; background: var(--card-bg); border-radius: 12px; padding: 12px 8px; text-align: center; border: 1px solid rgba(0,0,0,0.05); }
+
+        .modal { display: none; position: fixed; z-index: 2000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: var(--card-bg); width: 90%; max-width: 400px; padding: 25px; border-radius: 24px; max-height: 80vh; overflow-y: auto; }
+
+        .theme-toggle { position: absolute; top: 15px; right: 15px; z-index: 100; background: rgba(255,255,255,0.2); width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        
+        .loader-mini { border: 2px solid #f3f3f3; border-radius: 50%; border-top: 2px solid var(--primary-color); width: 14px; height: 14px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+        .sos-btn { display: flex; align-items: center; justify-content: space-between; background: #FFF3E0; color: #E65100; padding: 12px 16px; border-radius: 12px; text-decoration: none; margin-bottom: 8px; font-weight: 700; font-size: 14px; border: 1px solid #FFE0B2; }
+        
+        /* 拖曳時的視覺效果 */
+        .dragging { opacity: 0.5; border: 2px dashed var(--primary-color); }
+        .drag-over { border-top: 3px solid var(--primary-color); margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="sync-badge">
+        <div class="loader-mini" id="sync-loader"></div>
+        <span id="sync-text">嘗試雲端連線...</span>
+    </div>
+
+    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-black/80 text-white px-6 py-2 rounded-full text-sm z-[3000] hidden text-center min-w-[200px]"></div>
+
+    <header class="main-header">
+        <button class="theme-toggle" onclick="window.toggleTheme()" id="theme-icon">🌙</button>
+        <img src="https://images.unsplash.com/photo-1570737197026-45cf5d002a81?q=80&w=1000&auto=format&fit=crop" class="header-img" alt="Okinawa">
+        <div class="header-overlay">
+            <div class="header-date">2026/07/24 - 07/28</div>
+            <h1 class="header-title">沖繩自駕之旅</h1>
+            <div class="header-badge" id="countdown-badge">倒數 0 天出發 ✈️</div>
+        </div>
+    </header>
+
+    <nav class="sticky-nav">
+        <div class="nav-item active" onclick="window.switchView('home', this)">
+            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span>首頁</span>
+        </div>
+        <div class="nav-item" onclick="window.switchView('flights', this)">
+            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+            <span>機票</span>
+        </div>
+        <div class="nav-item" onclick="window.switchView('itinerary', this)">
+            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2.9.9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>
+            <span>行程</span>
+        </div>
+        <div class="nav-item" onclick="window.switchView('budget', this)">
+            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+            <span>記帳</span>
+        </div>
+        <div class="nav-item" onclick="window.switchView('checklist', this)">
+            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+            <span>清單</span>
+        </div>
+    </nav>
+
+    <main>
+        <!-- 首頁 -->
+        <section id="view-home" class="view-section active">
+            <h2 class="section-title">💴 即時匯率 (JPY ↔ TWD)</h2>
+            <div class="card-custom">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="text-[11px] text-slate-400 block mb-1">日幣 JPY</label>
+                        <input type="number" id="inputJPY" class="w-full p-3 border border-slate-200 rounded-xl text-right text-lg outline-none shadow-inner" value="1000" oninput="window.convertRate('jpy')">
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-slate-400 block mb-1">台幣 TWD</label>
+                        <input type="number" id="inputTWD" class="w-full p-3 border border-slate-200 rounded-xl text-right text-lg outline-none shadow-inner" oninput="window.convertRate('twd')">
+                    </div>
+                </div>
+                <div class="flex justify-between items-center text-xs text-slate-500">
+                    <span>基準匯率: <span id="current-rate">0.215</span></span>
+                    <button onclick="window.fetchRate()" class="font-bold text-sky-600">🔄 更新匯率</button>
+                </div>
+            </div>
+
+            <h2 class="section-title">☀️ 那霸即時天氣</h2>
+            <div class="weather-scroller flex gap-2 overflow-x-auto pb-2 scrollbar-hide" id="weather-list">
+                <div class="py-5 text-center w-full text-slate-400 text-sm">載入天氣中...</div>
+            </div>
+
+            <h2 class="section-title">🇯🇵 VJW 入境 QR Code (私人同步)</h2>
+            <div class="card-custom text-center">
+                <div id="vjw-container" class="min-h-[150px] flex items-center justify-center border-2 border-dashed border-slate-200 rounded-xl mb-3 cursor-pointer hover:border-sky-300 transition-colors" onclick="document.getElementById('vjw-upload').click()">
+                    <img id="vjw-img" class="hidden max-w-full max-h-[250px] rounded-lg shadow-sm">
+                    <div id="vjw-placeholder" class="text-slate-400 text-sm italic">點擊上傳 QR Code 截圖<br>(將安全儲存於私人雲端)</div>
+                </div>
+                <input type="file" id="vjw-upload" hidden accept="image/*" onchange="window.handleImage(this, 'vjw-img')">
+                <button class="btn-okinawa shadow-sm" onclick="window.open('https://vjw-lp.digital.go.jp/zh-hant/')">前往 VJW 官網</button>
+            </div>
+
+            <h2 class="section-title">🆘 緊急電話</h2>
+            <div class="space-y-2">
+                <a href="tel:110" class="sos-btn police bg-blue-50 border-blue-100 text-blue-600 shadow-sm"><span>👮 警察局</span><span>110</span></a>
+                <a href="tel:119" class="sos-btn medical bg-red-50 border-red-100 text-red-600 shadow-sm"><span>🚑 救護/火警</span><span>119</span></a>
+                <a href="tel:+81988622055" class="sos-btn bg-orange-50 border-orange-100 text-orange-600 shadow-sm"><span>📞 駐那霸辦事處</span><span>+81-98-862-2055</span></a>
+            </div>
+        </section>
+
+        <!-- 機票 -->
+        <section id="view-flights" class="view-section">
+            <h2 class="section-title">✈️ 我的航班資訊 (私人同步)</h2>
+            <div id="flight-content"></div>
+        </section>
+
+        <!-- 行程 -->
+        <section id="view-itinerary" class="view-section">
+            <div class="sticky top-[60px] bg-white/80 backdrop-blur-md z-[50] py-2 -mx-5 px-5 border-b border-slate-100 mb-4 flex justify-between items-center">
+                <div id="day-tabs" class="flex gap-2 overflow-x-auto scrollbar-hide" id="day-tabs"></div>
+                <!-- 排序按鈕已移走 -->
+            </div>
+
+            <!-- 內嵌式新增行程 -->
+            <div class="card-custom mb-6 border-2 border-dashed border-sky-200 bg-sky-50/20">
+                <div class="text-xs font-bold mb-3 text-sky-700">快速新增景點 (共用雲端)</div>
+                <div class="grid grid-cols-3 gap-2 mb-2">
+                    <!-- 時間改為非必填 -->
+                    <input type="time" id="inline-trip-time" class="p-2 border border-slate-200 rounded-lg outline-none text-xs" placeholder="時間(選填)">
+                    <input type="text" id="inline-trip-name" class="col-span-2 p-2 border border-slate-200 rounded-lg outline-none text-xs" placeholder="景點名稱 (必填)">
+                </div>
+                <input type="text" id="inline-trip-note" class="w-full p-2 border border-slate-200 rounded-lg outline-none text-xs mb-3" placeholder="備註 / Mapcode">
+                
+                <div class="flex gap-2">
+                    <button class="flex-[2] py-2 bg-sky-600 text-white rounded-lg font-bold text-xs shadow-sm" onclick="window.saveTripInline()">新增至行程</button>
+                    <!-- 時間排序按鈕移動到這裡 -->
+                    <button class="flex-1 py-2 bg-slate-100 text-slate-500 rounded-lg font-bold text-xs shadow-sm border border-slate-200" onclick="window.sortCurrentDay()">🔄 時間排序</button>
+                </div>
+            </div>
+
+            <div id="day-content"></div>
+        </section>
+
+        <!-- 記帳 -->
+        <section id="view-budget" class="view-section">
+            <div id="budget-root"></div>
+        </section>
+
+        <!-- 清單 -->
+        <section id="view-checklist" class="view-section">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="section-title">✅ 行前清單 (私人同步)</h2>
+                <button id="todo-toggle-all" class="text-[10px] bg-sky-600 text-white px-3 py-1.5 rounded-full font-bold mt-4" onclick="window.toggleAllTodos()">一鍵全選</button>
+            </div>
+            <div class="card-custom">
+                <div class="flex gap-2 mb-4">
+                    <input type="text" id="todo-input" class="flex-1 p-3 border border-slate-200 rounded-xl outline-none focus:ring-1 focus:ring-sky-500" placeholder="新增項目...">
+                    <button class="bg-slate-800 text-white w-12 rounded-xl text-xl font-bold shadow-lg" onclick="window.addTodo()">＋</button>
+                </div>
+                <div id="todo-list" class="space-y-2"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 編輯機票 Modal -->
+    <div class="modal" id="modal-flight-edit">
+        <div class="modal-content">
+            <h3 class="text-lg font-bold mb-4 text-slate-800">編輯機票資訊</h3>
+            <div class="space-y-4" id="flight-edit-fields"></div>
+            <div class="flex gap-2 pt-4">
+                <button class="flex-1 p-3 bg-slate-100 text-slate-600 rounded-xl font-bold" onclick="window.closeModal()">取消</button>
+                <button class="flex-1 p-3 bg-teal-600 text-white rounded-xl font-bold shadow-sm" onclick="window.saveFlightEdit()">儲存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 編輯行程 Modal -->
+    <div class="modal" id="modal-trip-edit">
+        <div class="modal-content">
+            <h3 class="text-lg font-bold mb-4 text-slate-800">編輯行程資訊</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-[10px] text-slate-400 font-bold">時間 (選填)</label>
+                    <input type="time" id="edit-trip-time" class="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400">
+                </div>
+                <div>
+                    <label class="text-[10px] text-slate-400 font-bold">景點名稱 (必填)</label>
+                    <input type="text" id="edit-trip-name" class="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400">
+                </div>
+                <div>
+                    <label class="text-[10px] text-slate-400 font-bold">備註 / Mapcode</label>
+                    <input type="text" id="edit-trip-note" class="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400">
+                </div>
+            </div>
+            <div class="flex gap-2 pt-4">
+                <button class="flex-1 p-3 bg-slate-100 text-slate-600 rounded-xl font-bold" onclick="window.closeModal()">取消</button>
+                <button class="flex-1 p-3 bg-sky-600 text-white rounded-xl font-bold shadow-sm" onclick="window.saveTripEdit()">儲存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript 核心邏輯 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // 初始化狀態 (加上QR欄位預設)
+        window.state = {
+            itinerary: [],
+            todos: [{ text: "護照與駕照譯本", done: false }],
+            flights: {
+                passenger: "", ticket: "", ref: "",
+                outbound: { date: "", dep: "", depT: "", arr: "", arrT: "", depTime: "", arrTime: "", dur: "", no: "", air: "", cls: "", bag: "", w: "", qr: "" },
+                inbound: { date: "", dep: "", depT: "", arr: "", arrT: "", depTime: "", arrTime: "", dur: "", no: "", air: "", cls: "", bag: "", w: "", qr: "" }
+            },
+            currentDay: 0,
+            rate: 0.215,
+            theme: 'light'
+        };
+
+        const manualConfig = {
+          apiKey: "AIzaSyBcrJKHsT-DCqkO1TOVAyFu5UwnKWhEsr8",
+          authDomain: "okinawa-c5162.firebaseapp.com",
+          projectId: "okinawa-c5162",
+          storageBucket: "okinawa-c5162.firebasestorage.app",
+          messagingSenderId: "432482303393",
+          appId: "1:432482303393:web:b7c0eb54acae212bf5dfe0",
+          measurementId: "G-ZFYN419E2G"
+        };
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : manualConfig;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : "okinawa-trip-v1";
+        
+        const app = firebaseConfig.apiKey ? initializeApp(firebaseConfig) : null;
+        const auth = app ? getAuth(app) : null;
+        const db = app ? getFirestore(app) : null;
+
+        window.firebase = { db, auth, doc, setDoc, onSnapshot, appId };
+
+        const updateSyncUI = (status) => {
+            const loader = document.getElementById('sync-loader');
+            const text = document.getElementById('sync-text');
+            if (!loader || !text) return;
+            if(status === 'syncing') {
+                loader.classList.remove('hidden');
+                text.innerText = "同步中...";
+            } else if (status === 'connected') {
+                loader.classList.add('hidden');
+                text.innerText = "雲端已連線";
+            } else if (status === 'local') {
+                loader.classList.add('hidden');
+                text.innerText = "本機模式";
+            }
+        };
+
+        window.saveTripInline = () => {
+            const time = document.getElementById('inline-trip-time').value; // 時間可以為空
+            const name = document.getElementById('inline-trip-name').value;
+            const note = document.getElementById('inline-trip-note').value;
+            
+            if(!name) return; // 只有景點名稱是必填
+            
+            if(!window.state.itinerary[window.state.currentDay]) {
+                window.state.itinerary[window.state.currentDay] = { day: window.state.currentDay + 1, items: [] };
+            }
+            window.state.itinerary[window.state.currentDay].items.push({
+                name, time: time || '', note, query: name, subItems: []
+            });
+            window.sortCurrentDay(); // 新增時自動排序並存入雲端
+            document.getElementById('inline-trip-time').value = '';
+            document.getElementById('inline-trip-name').value = '';
+            document.getElementById('inline-trip-note').value = '';
+        };
+
+        window.sortCurrentDay = () => {
+            if(window.state.itinerary[window.state.currentDay] && window.state.itinerary[window.state.currentDay].items) {
+                window.state.itinerary[window.state.currentDay].items.sort((a,b) => {
+                    const timeA = a.time || '24:00'; // 沒時間的排到最後
+                    const timeB = b.time || '24:00';
+                    return timeA.localeCompare(timeB);
+                });
+                window.saveToCloud();
+                window.renderItinerary();
+            }
+        };
+
+        window.addSubTrip = (dI, iI) => {
+            const nameInput = document.getElementById(`sub-input-${iI}`);
+            const noteInput = document.getElementById(`sub-note-input-${iI}`);
+            if(!nameInput || !nameInput.value.trim()) return;
+            if(!window.state.itinerary[dI].items[iI].subItems) window.state.itinerary[dI].items[iI].subItems = [];
+            window.state.itinerary[dI].items[iI].subItems.push({
+                text: nameInput.value.trim(),
+                note: noteInput ? noteInput.value.trim() : ""
+            });
+            window.saveToCloud(); 
+            nameInput.value = '';
+            if(noteInput) noteInput.value = '';
+        };
+
+        window.switchView = (view, el) => {
+            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+            const target = document.getElementById(`view-${view}`);
+            if(target) target.classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            if(el) el.classList.add('active');
+            window.scrollTo(0, 0);
+        };
+
+        window.toggleTheme = () => {
+            const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            const icon = document.getElementById('theme-icon');
+            if(icon) icon.innerText = next === 'light' ? '🌙' : '☀️';
+        };
+
+        window.closeModal = () => document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+
+        // 拖曳排序相關函數
+        window.draggedTripIndex = null;
+        window.handleDragStart = (e, idx) => {
+            window.draggedTripIndex = idx;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        };
+        window.handleDragOver = (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        };
+        window.handleDragEnter = (e, idx) => {
+            e.preventDefault();
+            const card = e.currentTarget;
+            if (window.draggedTripIndex !== null && window.draggedTripIndex !== idx) {
+                card.classList.add('drag-over');
+            }
+        };
+        window.handleDragLeave = (e) => {
+            e.currentTarget.classList.remove('drag-over');
+        };
+        window.handleDrop = (e, targetIdx) => {
+            e.stopPropagation();
+            e.currentTarget.classList.remove('drag-over');
+            const srcIdx = window.draggedTripIndex;
+            if (srcIdx !== null && srcIdx !== targetIdx) {
+                const dayItems = window.state.itinerary[window.state.currentDay].items;
+                const [draggedItem] = dayItems.splice(srcIdx, 1);
+                dayItems.splice(targetIdx, 0, draggedItem);
+                window.saveToCloud();
+                window.renderItinerary();
+            }
+            window.draggedTripIndex = null;
+            return false;
+        };
+        window.handleDragEnd = (e) => {
+            e.target.classList.remove('dragging');
+            document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            window.draggedTripIndex = null;
+        };
+
+        window.renderItinerary = function() {
+            const tabs = document.getElementById('day-tabs');
+            const content = document.getElementById('day-content');
+            if (!tabs || !content) return;
+            tabs.innerHTML = '';
+            
+            // 防呆補齊天數至5天
+            while(window.state.itinerary.length < 5) {
+                window.state.itinerary.push({ day: window.state.itinerary.length + 1, items: [] });
+            }
+            
+            const dateMap = ['07/24', '07/25', '07/26', '07/27', '07/28'];
+            window.state.itinerary.forEach((day, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `tab-btn ${window.state.currentDay === idx ? 'active' : ''}`;
+                btn.innerText = `Day ${idx + 1} (${dateMap[idx] || ''})`;
+                btn.onclick = () => { window.state.currentDay = idx; window.renderItinerary(); };
+                tabs.appendChild(btn);
+            });
+            const currentDay = window.state.itinerary[window.state.currentDay];
+            if(!currentDay) return;
+            
+            content.innerHTML = (currentDay.items || []).map((item, idx) => {
+                const subs = (item.subItems || []).map((sub, sIdx) => {
+                    const name = typeof sub === 'object' ? sub.text : sub;
+                    const note = typeof sub === 'object' ? sub.note : "";
+                    return `
+                    <div class="flex justify-between items-start bg-slate-50/80 p-2 rounded-lg text-[11px] group/sub mb-1 shadow-sm">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-slate-600 font-bold">• ${name}</span>
+                                <button onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}')" class="p-1 text-sky-400">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                </button>
+                            </div>
+                            ${note ? `<div class="text-[9px] text-slate-400 mt-0.5 ml-2 italic">${note}</div>` : ''}
+                        </div>
+                        <button onclick="window.deleteSubTrip(${window.state.currentDay}, ${idx}, ${sIdx})" class="text-red-200 hover:text-red-500 font-bold px-1">×</button>
+                    </div>`;
+                }).join('');
+
+                return `
+                <div class="card-custom mb-4 shadow-sm border border-slate-50 relative transition-all"
+                     draggable="true"
+                     ondragstart="window.handleDragStart(event, ${idx})"
+                     ondragover="window.handleDragOver(event)"
+                     ondragenter="window.handleDragEnter(event, ${idx})"
+                     ondragleave="window.handleDragLeave(event)"
+                     ondrop="window.handleDrop(event, ${idx})"
+                     ondragend="window.handleDragEnd(event)">
+                    <div class="absolute left-1 top-1/2 -translate-y-1/2 cursor-grab text-slate-300 p-2 hover:text-slate-500 active:cursor-grabbing" title="拖曳排序" style="touch-action: none;">≡</div>
+                    <button class="absolute top-2 right-10 p-1 text-slate-300 hover:text-sky-500 transition-colors" onclick="window.openTripEdit(${idx})" title="編輯行程">✏️</button>
+                    <button class="btn-delete" onclick="window.deleteTrip(${idx})">×</button>
+                    <div class="flex items-start gap-3 ml-6">
+                        <div class="flex-1">
+                            ${item.time ? `<span class="time-tag text-sky-600 font-bold">${item.time}</span>` : ''}
+                            <div class="location-name font-black text-slate-800">${item.name}</div>
+                            <div class="highlight text-xs text-slate-400 italic mb-2">${item.note}</div>
+                            <div class="mt-3 space-y-1.5 border-l-2 border-sky-100 pl-3">
+                                ${subs}
+                                <div class="mt-4 p-2 bg-slate-50/50 rounded-lg border border-slate-100">
+                                    <div class="flex gap-2 mb-1.5">
+                                        <input id="sub-input-${idx}" class="flex-1 text-[11px] p-2 bg-white border border-slate-200 rounded-md outline-none" placeholder="細節項目名稱">
+                                        <button onclick="window.addSubTrip(${window.state.currentDay}, ${idx})" class="bg-sky-500 text-white w-8 h-8 rounded-md text-sm font-bold">＋</button>
+                                    </div>
+                                    <input id="sub-note-input-${idx}" class="w-full text-[10px] p-2 bg-white border border-slate-200 rounded-md outline-none" placeholder="細節備註 (如預約時間、門票)">
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="window.open('https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.query || item.name)}')" class="p-2 text-sky-500 hover:bg-sky-50 rounded-full mt-6">
+                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+                        </button>
+                    </div>
+                </div>`;
+            }).join('') || '<div class="text-center py-10 text-slate-300 italic text-sm">尚未規劃行程</div>';
+        };
+
+        window.renderTodos = function() {
+            const list = document.getElementById('todo-list');
+            if(!list) return;
+            list.innerHTML = window.state.todos.map((t, i) => `
+                <div class="card-custom flex items-center p-4 ${t.done ? 'opacity-50' : ''} shadow-sm border border-slate-100">
+                    <input type="checkbox" ${t.done ? 'checked' : ''} onchange="window.toggleTodo(${i})" class="w-5 h-5 mr-3 accent-sky-600">
+                    <span class="flex-1 ${t.done ? 'line-through text-slate-400' : 'text-slate-700 font-medium'}">${t.text}</span>
+                    <button onclick="window.deleteTodo(${i})" class="text-slate-300 ml-2 text-xl hover:text-red-400">×</button>
+                </div>`).join('');
+            const toggleBtn = document.getElementById('todo-toggle-all');
+            if(toggleBtn && window.state.todos.length > 0) {
+                const allDone = window.state.todos.every(t => t.done);
+                toggleBtn.innerText = allDone ? "取消全選" : "一鍵全選";
+            }
+        };
+
+        window.toggleAllTodos = () => {
+            const allDone = window.state.todos.every(t => t.done);
+            window.state.todos.forEach(t => t.done = !allDone);
+            window.savePrivateCloud(); 
+            window.renderTodos();
+        };
+
+        window.renderFlights = function() {
+            const container = document.getElementById('flight-content');
+            if(!container) return;
+            const f = window.state.flights;
+            const renderPart = (type, data) => `
+                <div class="card-custom relative">
+                    <button class="absolute top-4 right-4 text-orange-400 p-2" onclick="window.openFlightEdit('${type}')">✏️</button>
+                    <div class="text-sky-600 font-bold text-sm mb-4 uppercase">${type==='outbound'?'去程':'回程'} | ${data.date || '--'}</div>
+                    <div class="flex justify-between items-center mb-4 px-2">
+                        <div class="text-center"><div class="text-3xl font-black text-slate-800">${data.dep || '--'}</div></div>
+                        <div class="flex flex-col items-center flex-1 mx-4"><div class="text-xl text-sky-200">✈️</div><div class="text-[10px] text-slate-300 border-t border-slate-100 w-full text-center pt-1 mt-1 font-bold"></div></div>
+                        <div class="text-center"><div class="text-3xl font-black text-slate-800">${data.arr || '--'}</div></div>
+                    </div>
+                    <div class="flex justify-between font-black text-2xl text-slate-700 mb-6"><span>${data.depTime || '--:--'}</span><span>${data.arrTime || '--:--'}</span></div>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="bg-slate-50 text-slate-400 text-[10px] px-2 py-1 rounded font-black border border-slate-100">${data.no || '航班號'}</span>
+                        <span class="bg-slate-50 text-slate-400 text-[10px] px-2 py-1 rounded font-black border border-slate-100">${data.air || '航空公司'}</span>
+                    </div>
+                    
+                    <!-- 新增的 QR Code 區塊 -->
+                    <div class="mt-4 border-t border-slate-50 pt-4">
+                        <div class="text-[10px] text-slate-400 font-bold mb-2 uppercase">登機 QR Code (私人同步)</div>
+                        <div class="min-h-[80px] flex items-center justify-center border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-sky-300 transition-colors bg-slate-50 overflow-hidden" onclick="document.getElementById('qr-upload-${type}').click()">
+                            ${data.qr ? '<img src="' + data.qr + '" class="w-full max-h-[250px] object-contain">' : '<div class="text-slate-400 text-xs italic p-4 text-center">點擊上傳登機證 QR Code</div>'}
+                        </div>
+                        <input type="file" id="qr-upload-${type}" hidden accept="image/*" onchange="window.handleFlightQr(this, '${type}')">
+                    </div>
+                </div>`;
+            container.innerHTML = `
+                <div class="bg-teal-600 rounded-2xl p-6 text-white mb-4 shadow-lg relative overflow-hidden">
+                    <button class="absolute top-4 right-4 text-white/50 p-2" onclick="window.openFlightEdit('main')">✏️</button>
+                    <div class="mb-6"><div class="text-[10px] uppercase opacity-60 font-black tracking-[0.2em] mb-1">Passenger</div><div class="text-2xl font-black">${f.passenger || '未設定姓名'}</div></div>
+                    <div class="flex justify-between items-end"><div><div class="text-[10px] uppercase opacity-60 font-black tracking-[0.2em] mb-1">Ticket</div><div class="text-sm font-bold font-mono tracking-tighter">${f.ticket || '--- --- ---'}</div></div><div class="text-right"><div class="text-[10px] uppercase opacity-60 font-black tracking-[0.2em] mb-1">Ref</div><div class="text-2xl font-black tracking-[0.1em]">${f.ref || '------'}</div></div></div>
+                </div>
+                ${renderPart('outbound', f.outbound)}
+                ${renderPart('inbound', f.inbound)}
+            `;
+        };
+
+        window.renderAll = function() {
+            window.renderItinerary(); window.renderTodos(); window.renderFlights();
+        };
+
+        // 共用雲端：行程
+        window.saveToCloud = async () => {
+            if (!auth || !auth.currentUser) return;
+            updateSyncUI('syncing');
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'trip_data', 'master');
+                await setDoc(docRef, { itinerary: window.state.itinerary }, { merge: true });
+                updateSyncUI('connected');
+            } catch(e) {
+                console.error("Save error", e);
+                updateSyncUI('local');
+            }
+        };
+
+        // 私人雲端
+        window.savePrivateCloud = async () => {
+            if (!auth || !auth.currentUser) return;
+            const uid = auth.currentUser.uid;
+            const docRef = doc(db, 'artifacts', appId, 'users', uid, 'private_data', 'master');
+            try {
+                const vjwImg = document.getElementById('vjw-img').src;
+                const vjwToSave = vjwImg.startsWith('data:image') ? vjwImg : null;
+                await setDoc(docRef, { 
+                    todos: window.state.todos,
+                    flights: window.state.flights,
+                    vjw: vjwToSave
+                }, { merge: true });
+            } catch(e) { console.error("Private save error", e); }
+        };
+
+        function setupSync() {
+            if (!auth || !auth.currentUser) {
+                updateSyncUI('local');
+                return;
+            }
+            // 監聽公用資料 (行程)
+            const publicRef = doc(db, 'artifacts', appId, 'public', 'data', 'trip_data', 'master');
+            onSnapshot(publicRef, (snap) => {
+                updateSyncUI('connected');
+                if (snap.exists()) {
+                    window.state.itinerary = snap.data().itinerary || [];
+                    window.renderItinerary();
+                } else {
+                    window.saveToCloud();
+                }
+            }, (err) => {
+                console.error("Firebase error", err);
+                updateSyncUI('local');
+            });
+
+            // 監聽私人資料 (機票、清單、圖片)
+            const privateRef = doc(db, 'artifacts', appId, 'users', auth.currentUser.uid, 'private_data', 'master');
+            onSnapshot(privateRef, (snap) => {
+                if (snap.exists()) {
+                    const data = snap.data();
+                    if (data.todos) { window.state.todos = data.todos; window.renderTodos(); }
+                    if (data.flights) { window.state.flights = data.flights; window.renderFlights(); }
+                    if (data.vjw) {
+                        const img = document.getElementById('vjw-img');
+                        img.src = data.vjw; 
+                        img.classList.remove('hidden'); 
+                        document.getElementById('vjw-placeholder').classList.add('hidden'); 
+                    }
+                }
+            }, (err) => console.error("Private Firebase error", err));
+        }
+
+        window.editingTripIndex = null;
+        window.openTripEdit = (idx) => {
+            window.editingTripIndex = idx;
+            const item = window.state.itinerary[window.state.currentDay].items[idx];
+            document.getElementById('edit-trip-time').value = item.time || '';
+            document.getElementById('edit-trip-name').value = item.name || '';
+            document.getElementById('edit-trip-note').value = item.note || '';
+            document.getElementById('modal-trip-edit').classList.add('active');
+        };
+
+        window.saveTripEdit = () => {
+            if (window.editingTripIndex === null) return;
+            const idx = window.editingTripIndex;
+            const time = document.getElementById('edit-trip-time').value;
+            const name = document.getElementById('edit-trip-name').value;
+            const note = document.getElementById('edit-trip-note').value;
+            
+            if(!name) return; // 只有名稱是必填，時間可以為空
+            
+            const item = window.state.itinerary[window.state.currentDay].items[idx];
+            item.time = time || '';
+            item.name = name;
+            item.note = note;
+            item.query = name; 
+            
+            window.saveToCloud();
+            window.renderItinerary();
+            window.closeModal();
+            window.editingTripIndex = null;
+        };
+
+        window.deleteTrip = (idx) => { window.state.itinerary[window.state.currentDay].items.splice(idx, 1); window.saveToCloud(); };
+        window.deleteSubTrip = (dI, iI, sI) => { window.state.itinerary[dI].items[iI].subItems.splice(sI, 1); window.saveToCloud(); };
+        window.addTodo = () => {
+            const v = document.getElementById('todo-input').value;
+            if(!v) return;
+            window.state.todos.push({text:v, done:false});
+            window.savePrivateCloud(); window.renderTodos();
+            document.getElementById('todo-input').value = '';
+        };
+        window.toggleTodo = (i) => { window.state.todos[i].done = !window.state.todos[i].done; window.savePrivateCloud(); window.renderTodos(); };
+        window.deleteTodo = (i) => { window.state.todos.splice(i,1); window.savePrivateCloud(); window.renderTodos(); };
+
+        window.openFlightEdit = (target) => {
+            const fields = document.getElementById('flight-edit-fields');
+            const f = window.state.flights;
+            let html = target === 'main' ? `
+                <input id="edit-p" class="w-full p-3 border rounded-xl" value="${f.passenger||''}" placeholder="乘客姓名">
+                <input id="edit-t" class="w-full p-3 border rounded-xl" value="${f.ticket||''}" placeholder="票號">
+                <input id="edit-r" class="w-full p-3 border rounded-xl" value="${f.ref||''}" placeholder="訂位代號">` : `
+                <input id="edit-date" class="w-full p-3 border rounded-xl" value="${f[target].date||''}" placeholder="日期">
+                <div class="flex gap-2">
+                    <input id="edit-depTime" class="flex-1 p-3 border rounded-xl" value="${f[target].depTime||''}" placeholder="起飛">
+                    <input id="edit-arrTime" class="flex-1 p-3 border rounded-xl" value="${f[target].arrTime||''}" placeholder="抵達">
+                </div>
+                <div class="flex gap-2">
+                    <input id="edit-dep" class="flex-1 p-3 border rounded-xl" value="${f[target].dep||''}" placeholder="起飛站 (代碼)">
+                    <input id="edit-arr" class="flex-1 p-3 border rounded-xl" value="${f[target].arr||''}" placeholder="抵達站 (代碼)">
+                </div>
+                <input id="edit-no" class="w-full p-3 border rounded-xl" value="${f[target].no||''}" placeholder="航班號">`;
+            fields.innerHTML = html; fields.dataset.target = target;
+            document.getElementById('modal-flight-edit').classList.add('active');
+        };
+
+        window.saveFlightEdit = () => {
+            const target = document.getElementById('flight-edit-fields').dataset.target;
+            const f = window.state.flights;
+            if(target === 'main') {
+                f.passenger = document.getElementById('edit-p').value; f.ticket = document.getElementById('edit-t').value; f.ref = document.getElementById('edit-r').value;
+            } else {
+                f[target].date = document.getElementById('edit-date').value; f[target].depTime = document.getElementById('edit-depTime').value; f[target].arrTime = document.getElementById('edit-arrTime').value;
+                f[target].dep = document.getElementById('edit-dep').value; f[target].arr = document.getElementById('edit-arr').value; f[target].no = document.getElementById('edit-no').value;
+            }
+            window.savePrivateCloud(); window.renderFlights(); window.closeModal();
+        };
+
+        // VJW 截圖上傳
+        window.handleImage = (input, id) => {
+            const f = input.files[0]; if(!f) return;
+            if(f.size > 500000) alert("圖片過大可能無法上傳雲端，請盡量裁切！");
+            const r = new FileReader(); r.onload = (e) => {
+                const img = document.getElementById(id); img.src = e.target.result;
+                img.classList.remove('hidden'); document.getElementById('vjw-placeholder').classList.add('hidden');
+                window.savePrivateCloud();
+            }; r.readAsDataURL(f);
+        };
+        
+        // 機票 QR Code 上傳
+        window.handleFlightQr = (input, type) => {
+            const f = input.files[0]; if(!f) return;
+            if(f.size > 500000) alert("圖片過大可能無法上傳雲端，請盡量裁切 QR Code 部分！");
+            const r = new FileReader(); r.onload = (e) => {
+                window.state.flights[type].qr = e.target.result;
+                window.savePrivateCloud();
+                window.renderFlights();
+            }; r.readAsDataURL(f);
+        };
+
+        window.fetchRate = async () => {
+            try {
+                const res = await fetch('https://api.exchangerate-api.com/v4/latest/JPY');
+                const data = await res.json(); window.state.rate = data.rates.TWD;
+                document.getElementById('current-rate').innerText = window.state.rate.toFixed(3);
+                window.dispatchEvent(new CustomEvent('rateUpdated', { detail: window.state.rate }));
+            } catch(e) {}
+        };
+        window.convertRate = (src) => {
+            const j = document.getElementById('inputJPY'); const t = document.getElementById('inputTWD');
+            if(src==='jpy') t.value = Math.round(j.value * window.state.rate); 
+            else t.value ? j.value = Math.round(t.value / window.state.rate) : null;
+        };
+
+        window.fetchWeather = async () => {
+            try {
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=26.2124&longitude=127.6809&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo');
+                const data = await res.json();
+                document.getElementById('weather-list').innerHTML = data.daily.time.map((time, i) => `
+                    <div class="weather-day-card">
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">${time.split('-').slice(1).join('/')}</div>
+                        <div class="text-2xl my-2">${getWeatherIcon(data.daily.weathercode[i])}</div>
+                        <div class="text-[11px] font-bold text-slate-800">${Math.round(data.daily.temperature_2m_max[i])}°</div>
+                    </div>`).join('');
+            } catch(e) {}
+        };
+        const getWeatherIcon = (c) => c<=1 ? '☀️' : c<=3 ? '☁️' : c<=65 ? '🌧️' : '🌤️';
+
+        const updateCountdown = () => {
+            const diff = Math.ceil((new Date('2026-07-24') - new Date()) / 86400000);
+            document.getElementById('countdown-badge').innerText = `倒數 ${diff>0?diff:0} 天出發 ✈️`;
+        };
+
+        window.init = async function() {
+            window.renderAll(); 
+            window.fetchRate(); 
+            window.fetchWeather(); 
+            updateCountdown();
+            setInterval(updateCountdown, 60000);
+
+            if (!auth || !firebaseConfig.apiKey) {
+                updateSyncUI('local');
+                return;
+            }
+
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                onAuthStateChanged(auth, (u) => { 
+                    if (u) { 
+                        updateSyncUI('connected'); 
+                        setupSync(); 
+                    } 
+                });
+            } catch (e) {
+                console.error("Auth init failed", e);
+                updateSyncUI('local');
+            }
+        };
+        
+        window.init();
+    </script>
+
+    <!-- React 記帳分帳組件 -->
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+        const CATEGORIES = [
+            { key: 'food', label: '餐飲', icon: '🍜', color: '#BA68C8' },
+            { key: 'traffic', label: '交通', icon: '🚇', color: '#64B5F6' },
+            { key: 'shopping', label: '購物', icon: '🛍️', color: '#F06292' },
+            { key: 'ticket', label: '門票', icon: '🎫', color: '#FFD54F' },
+            { key: 'stay', label: '住宿', icon: '🏨', color: '#FF8A65' },
+            { key: 'other', label: '其他', icon: '📄', color: '#CE93D8' },
+        ];
+
+        const BillSplitter = () => {
+            const [activeTab, setActiveTab] = useState('personal'); 
+            const [currency, setCurrency] = useState('JPY'); 
+            const [user, setUser] = useState(null);
+            const [isSyncing, setIsSyncing] = useState(false);
+            const [editingId, setEditingId] = useState(null);
+            const [liveRate, setLiveRate] = useState(window.state.rate || 0.215);
+            const [users, setUsers] = useState([{ id: 1, name: '成員 1' }, { id: 2, name: '成員 2' }, { id: 3, name: '成員 3' }, { id: 4, name: '成員 4' }]);
+            const [publicExpenses, setPublicExpenses] = useState([]);
+            const [personalExpenses, setPersonalExpenses] = useState([]);
+            const [newExpForm, setNewExpForm] = useState({ 
+                name: '', amount: '', curr: 'JPY', cat: 'food', payMethod: 'cash', 
+                payerId: 1, involved: [1,2,3,4], splitMode: 'equal', customAmounts: {} 
+            });
+
+            useEffect(() => {
+                const handleRateUpdate = (e) => setLiveRate(e.detail);
+                window.addEventListener('rateUpdated', handleRateUpdate);
+                
+                const fb = window.firebase || {};
+                if(fb.auth) fb.auth.onAuthStateChanged(setUser);
+                
+                return () => window.removeEventListener('rateUpdated', handleRateUpdate);
+            }, []);
+
+            useEffect(() => {
+                const fb = window.firebase || {};
+                if (!user || !fb.db || !fb.appId) return;
+
+                const publicRef = fb.doc(fb.db, 'artifacts', fb.appId, 'public', 'data', 'bill_splitter', 'data');
+                const unsubPublic = fb.onSnapshot(publicRef, (snap) => {
+                    if (snap.exists()) {
+                        const data = snap.data();
+                        if (data.users) setUsers(data.users);
+                        if (data.publicExpenses) {
+                            setPublicExpenses(data.publicExpenses.map(e => ({
+                                ...e, 
+                                payerId: Number(e.payerId), 
+                                involved: (e.involved || []).map(id => Number(id)),
+                                splitMode: e.splitMode || 'equal',
+                                customAmounts: e.customAmounts || {}
+                            })));
+                        }
+                    }
+                }, (err) => console.error("React public sync error", err));
+
+                const privateRef = fb.doc(fb.db, 'artifacts', fb.appId, 'users', user.uid, 'bill_splitter', 'personal');
+                const unsubPrivate = fb.onSnapshot(privateRef, (snap) => {
+                    if (snap.exists() && snap.data().expenses) {
+                        setPersonalExpenses(snap.data().expenses);
+                    }
+                }, (err) => console.error("React private sync error", err));
+
+                return () => {
+                    unsubPublic();
+                    unsubPrivate();
+                };
+            }, [user]);
+
+            const savePublicCloudData = async (u, e) => {
+                const fb = window.firebase || {};
+                if (!user || !fb.db) return;
+                setIsSyncing(true);
+                try {
+                    const docRef = fb.doc(fb.db, 'artifacts', fb.appId, 'public', 'data', 'bill_splitter', 'data');
+                    await fb.setDoc(docRef, { users: u, publicExpenses: e }, { merge: true });
+                } finally { setIsSyncing(false); }
+            };
+
+            const savePrivateCloudData = async (expenses) => {
+                const fb = window.firebase || {};
+                if (!user || !fb.db) return;
+                setIsSyncing(true);
+                try {
+                    const docRef = fb.doc(fb.db, 'artifacts', fb.appId, 'users', user.uid, 'bill_splitter', 'personal');
+                    await fb.setDoc(docRef, { expenses }, { merge: true });
+                } finally { setIsSyncing(false); }
+            };
+
+            const toJPY = (amt, curr) => curr === 'JPY' ? amt : Math.round(amt / liveRate);
+            
+            const format = (amt, curr) => {
+                const baseJPY = toJPY(amt, curr);
+                const val = currency === 'JPY' ? baseJPY : Math.round(baseJPY * liveRate);
+                return `${currency === 'JPY' ? '¥' : 'NT$'}${Math.round(val).toLocaleString()}`;
+            };
+
+            const addExpense = (type) => {
+                if (!newExpForm.name || !newExpForm.amount) return;
+                const item = { 
+                    id: editingId || Date.now(), 
+                    name: newExpForm.name, 
+                    amount: parseFloat(newExpForm.amount), 
+                    curr: newExpForm.curr, 
+                    cat: newExpForm.cat, 
+                    payMethod: newExpForm.payMethod, 
+                    splitType: type, 
+                    payerId: Number(newExpForm.payerId), 
+                    involved: type === 'shared' ? newExpForm.involved.map(id => Number(id)) : [1],
+                    splitMode: newExpForm.splitMode,
+                    customAmounts: newExpForm.splitMode === 'custom' ? newExpForm.customAmounts : {}
+                };
+                
+                if (type === 'shared') { 
+                    const updated = editingId ? publicExpenses.map(e => e.id === editingId ? item : e) : [item, ...publicExpenses];
+                    setPublicExpenses(updated); 
+                    savePublicCloudData(users, updated); 
+                } else { 
+                    const updated = editingId ? personalExpenses.map(e => e.id === editingId ? item : e) : [item, ...personalExpenses];
+                    setPersonalExpenses(updated); 
+                    savePrivateCloudData(updated); 
+                }
+                setNewExpForm({ ...newExpForm, name: '', amount: '', splitMode: 'equal', customAmounts: {} }); 
+                setEditingId(null);
+            };
+
+            const handleNameChange = (id, newName) => {
+                setUsers(users.map(u => Number(u.id) === id ? { ...u, name: newName } : u));
+            };
+
+            const handleNameBlur = () => {
+                savePublicCloudData(users, publicExpenses);
+            };
+
+            const startEdit = (e) => {
+                setEditingId(e.id);
+                setNewExpForm({
+                    name: e.name,
+                    amount: e.amount,
+                    curr: e.curr,
+                    cat: e.cat,
+                    payMethod: e.payMethod,
+                    payerId: e.payerId,
+                    involved: e.involved || [],
+                    splitMode: e.splitMode || 'equal',
+                    customAmounts: e.customAmounts || {}
+                });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+
+            const deleteExpense = (id, type) => {
+                if (type === 'shared') { 
+                    const updated = publicExpenses.filter(x => x.id !== id); 
+                    setPublicExpenses(updated); 
+                    savePublicCloudData(users, updated); 
+                }
+                else { 
+                    const updated = personalExpenses.filter(x => x.id !== id); 
+                    setPersonalExpenses(updated);
+                    savePrivateCloudData(updated);
+                }
+                if (editingId === id) setEditingId(null);
+            };
+
+            const currentTotal = useMemo(() => {
+                const list = activeTab === 'personal' ? personalExpenses : publicExpenses;
+                return list.reduce((s, e) => s + toJPY(e.amount, e.curr), 0);
+            }, [personalExpenses, publicExpenses, activeTab, liveRate]);
+
+            const settlements = useMemo(() => {
+                let balances = {}; users.forEach(u => balances[Number(u.id)] = 0);
+                publicExpenses.forEach(e => {
+                    const amt = toJPY(e.amount, e.curr);
+                    const payerId = Number(e.payerId);
+                    if (balances[payerId] !== undefined) balances[payerId] += amt;
+                    
+                    if (e.splitMode === 'custom' && e.customAmounts) {
+                        Object.entries(e.customAmounts).forEach(([uid, shareAmt]) => {
+                            const jpyShare = toJPY(shareAmt || 0, e.curr);
+                            if (balances[Number(uid)] !== undefined) balances[Number(uid)] -= jpyShare;
+                        });
+                    } else {
+                        const involvedIds = (e.involved || []).map(id => Number(id));
+                        const share = amt / (involvedIds.length || 1);
+                        involvedIds.forEach(uid => { if(balances[uid] !== undefined) balances[uid] -= share; });
+                    }
+                });
+                let debtors = [], creditors = [];
+                Object.keys(balances).forEach(id => {
+                    const b = balances[id];
+                    if (b < -1) debtors.push({ id: Number(id), b: Math.abs(b) });
+                    else if (b > 1) creditors.push({ id: Number(id), b });
+                });
+                const res = []; let i = 0, j = 0;
+                let dCopy = debtors.map(d=>({...d})); let cCopy = creditors.map(c=>({...c}));
+                while(i < dCopy.length && j < cCopy.length) {
+                    const d = dCopy[i], c = cCopy[j]; const amt = Math.min(d.b, c.b);
+                    const fromUser = users.find(u=>Number(u.id) === Number(d.id));
+                    const toUser = users.find(u=>Number(u.id) === Number(c.id));
+                    if (fromUser && toUser) res.push({ from: fromUser.name, to: toUser.name, amt: amt }); 
+                    d.b -= amt; c.b -= amt; if (d.b < 1) i++; if (c.b < 1) j++;
+                }
+                return res;
+            }, [publicExpenses, users, liveRate]);
+
+            // 計算自訂金額合計是否正確
+            const customTotal = useMemo(() => {
+                return Object.values(newExpForm.customAmounts || {}).reduce((s, val) => s + (parseFloat(val) || 0), 0);
+            }, [newExpForm.customAmounts]);
+            const isAmountMatch = Math.abs(customTotal - (parseFloat(newExpForm.amount) || 0)) < 1;
+
+            return (
+                <div className="space-y-4 pb-10">
+                    <div className="flex bg-sky-50 rounded-xl p-1 gap-1">
+                        {['personal', 'public', 'settle'].map(t => (
+                            <button key={t} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeTab===t ? 'bg-white text-sky-600 shadow-md' : 'text-sky-300'}`} onClick={()=>setActiveTab(t)}>
+                                {t==='personal'?'👤 個人 (私人)':t==='public'?'👥 公費 (雲端)': '⚖️ 結算'}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="flex justify-center gap-2">
+                        {['JPY', 'TWD'].map(c => (
+                            <button key={c} className={`px-5 py-1 text-[10px] font-bold rounded-full border transition-all ${currency===c ? 'bg-sky-600 text-white border-sky-600' : 'bg-white text-sky-600 border-sky-600'}`} onClick={()=>setCurrency(c)}>{c}</button>
+                        ))}
+                    </div>
+                    {activeTab !== 'settle' ? (
+                        <div className="space-y-4">
+                            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col items-center">
+                                <div className="text-[10px] text-slate-400 mb-4 font-black uppercase tracking-widest">{activeTab==='personal'?'個人自付':'公費統計'}</div>
+                                <div className="relative w-40 h-40 flex items-center justify-center rounded-full shadow-inner border-4 border-white" style={{ background: `conic-gradient(#0288D1 0% 100%)` }}>
+                                    <div className="relative w-28 h-28 bg-white rounded-full flex flex-col items-center justify-center shadow-md">
+                                        <div className="text-[8px] text-slate-400 font-bold uppercase">Total ({currency})</div>
+                                        <div className="text-xs font-black text-slate-700 font-mono">{format(currentTotal, 'JPY')}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {activeTab === 'public' && (
+                                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 relative">
+                                    <div className="text-[10px] text-slate-400 font-black mb-2 tracking-widest uppercase">編輯成員名稱</div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {users.map(u => (
+                                            <input key={u.id} className="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-xs font-bold text-center focus:ring-1 focus:ring-sky-500 outline-none shadow-sm" value={u.name} onChange={(e) => handleNameChange(Number(u.id), e.target.value)} onBlur={handleNameBlur} />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-3 shadow-inner relative">
+                                {editingId && <div className="absolute -top-3 left-4 bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-md">正在編輯</div>}
+                                <input className="w-full p-3 rounded-xl border border-slate-200 text-sm bg-white outline-none focus:ring-2 focus:ring-sky-500" placeholder="項目名稱" value={newExpForm.name} onChange={e=>setNewExpForm({...newExpForm, name:e.target.value})} />
+                                <div className="flex gap-2">
+                                    <input type="number" className="flex-1 p-3 rounded-xl border border-slate-200 text-sm font-black bg-white outline-none" placeholder="金額" value={newExpForm.amount} onChange={e=>setNewExpForm({...newExpForm, amount:e.target.value})} />
+                                    <div className="flex bg-white rounded-xl border border-sky-400 overflow-hidden"><button className={`px-4 py-1 text-[10px] font-bold ${newExpForm.curr==='JPY'?'bg-sky-500 text-white':'text-sky-500'}`} onClick={()=>setNewExpForm({...newExpForm, curr:'JPY'})}>JPY</button><button className={`px-4 py-1 text-[10px] font-bold ${newExpForm.curr==='TWD'?'bg-sky-500 text-white':'text-sky-500'}`} onClick={()=>setNewExpForm({...newExpForm, curr:'TWD'})}>TWD</button></div>
+                                </div>
+                                {activeTab === 'public' && (
+                                    <div className="space-y-3 pt-2">
+                                        <div className="py-1"><label className="text-[10px] text-slate-400 block mb-2 font-bold px-1 uppercase">誰先墊款？</label>
+                                            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                                                {users.map(u => ( <button key={u.id} onClick={()=>setNewExpForm({...newExpForm, payerId: Number(u.id)})} className={`px-4 py-2 rounded-full text-xs font-bold border transition-all shadow-sm ${Number(newExpForm.payerId) === Number(u.id) ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200'}`}>{u.name}</button> ))}
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="py-1">
+                                            <div className="flex justify-between items-center mb-2 px-1">
+                                                <label className="text-[10px] text-slate-400 font-bold uppercase">分攤方式設定</label>
+                                                <div className="flex bg-slate-200 p-0.5 rounded-md">
+                                                    <button className={`px-3 py-1 text-[10px] font-bold rounded ${newExpForm.splitMode==='equal'?'bg-white text-slate-800 shadow-sm':'text-slate-500'}`} onClick={()=>setNewExpForm({...newExpForm, splitMode: 'equal'})}>均分</button>
+                                                    <button className={`px-3 py-1 text-[10px] font-bold rounded ${newExpForm.splitMode==='custom'?'bg-white text-slate-800 shadow-sm':'text-slate-500'}`} onClick={()=>setNewExpForm({...newExpForm, splitMode: 'custom'})}>自訂</button>
+                                                </div>
+                                            </div>
+
+                                            {newExpForm.splitMode === 'equal' ? (
+                                                <div className="grid grid-cols-4 gap-2">
+                                                    {users.map(u => ( 
+                                                        <button key={u.id} 
+                                                            onClick={() => { 
+                                                                const uid = Number(u.id);
+                                                                const next = newExpForm.involved.includes(uid) 
+                                                                    ? newExpForm.involved.filter(id => id !== uid) 
+                                                                    : [...newExpForm.involved, uid]; 
+                                                                if(next.length > 0) setNewExpForm({...newExpForm, involved: next}); 
+                                                            }} 
+                                                            className={`py-2 rounded-lg text-[10px] font-bold border transition-all ${newExpForm.involved.includes(Number(u.id)) ? 'bg-emerald-50 border-emerald-300 text-emerald-600 font-black' : 'bg-white border-slate-100 text-slate-300'}`}>
+                                                            {u.name}
+                                                        </button> 
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-2 bg-white p-3 rounded-xl border border-slate-100">
+                                                    {users.map(u => (
+                                                        <div key={u.id} className="flex items-center gap-2">
+                                                            <span className="text-xs w-16 truncate font-bold text-slate-600">{u.name}</span>
+                                                            <input type="number" className="flex-1 p-2 border border-slate-200 rounded-lg text-xs outline-none focus:border-sky-400" placeholder={`自訂 ${newExpForm.curr} 金額`} 
+                                                                value={newExpForm.customAmounts[u.id] || ''} 
+                                                                onChange={(e) => setNewExpForm({...newExpForm, customAmounts: {...newExpForm.customAmounts, [u.id]: e.target.value === '' ? '' : parseFloat(e.target.value)}})} />
+                                                        </div>
+                                                    ))}
+                                                    <div className={`text-[10px] font-bold text-right mt-2 ${isAmountMatch ? 'text-emerald-500' : 'text-red-400'}`}>
+                                                        合計: {customTotal} / 總額: {newExpForm.amount || 0}
+                                                        {!isAmountMatch && ' (金額不符)'}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                                <div className="grid grid-cols-3 gap-2 mt-2"> {CATEGORIES.map(c => ( <button key={c.key} className={`flex flex-col items-center p-2.5 rounded-xl border transition-all ${newExpForm.cat===c.key ? 'bg-orange-50 border-orange-200' : 'bg-white border-slate-50'}`} onClick={()=>setNewExpForm({...newExpForm, cat:c.key})}> <span className="text-xl mb-1">{c.icon}</span> <span className={`text-[10px] ${newExpForm.cat===c.key?'text-orange-600 font-bold':'text-slate-400'}`}>{c.label}</span> </button> ))} </div>
+                                <div className="flex gap-2 mt-2">
+                                    {editingId && <button className="flex-1 bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-sm shadow-md active:scale-95 transition-all" onClick={() => { setEditingId(null); setNewExpForm({name:'', amount:'', curr:'JPY', cat:'food', payMethod:'cash', payerId:1, involved:[1,2,3,4], splitMode: 'equal', customAmounts:{}}); }}>取消</button>}
+                                    <button className="flex-[2] bg-slate-800 text-white py-3 rounded-xl font-bold text-sm shadow-xl active:scale-95 transition-all disabled:opacity-50" disabled={activeTab==='public' && newExpForm.splitMode==='custom' && !isAmountMatch} onClick={() => addExpense(activeTab==='personal'?'personal':'shared')}>{editingId ? '更新這筆支出' : '確認新增'}</button>
+                                </div>
+                            </div>
+                            <div className="space-y-2 mt-6">
+                                {(activeTab === 'personal' ? personalExpenses : publicExpenses).map(e => {
+                                    const payer = users.find(u => Number(u.id) === Number(e.payerId));
+                                    const originalAmtStr = e.curr === 'JPY' ? `¥${Math.round(e.amount).toLocaleString()}` : `NT$${Math.round(e.amount).toLocaleString()}`;
+                                    
+                                    let splitText = '';
+                                    if (activeTab === 'public') {
+                                        if (e.splitMode === 'custom') {
+                                            const parts = Object.entries(e.customAmounts || {})
+                                                .filter(([uid, amt]) => amt > 0)
+                                                .map(([uid, amt]) => `${users.find(u => Number(u.id) === Number(uid))?.name || '未知'}: ${amt}`);
+                                            splitText = <div className="text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded inline-block">自訂分配: {parts.join(', ')}</div>;
+                                        } else {
+                                            const involvedList = (e.involved || []).map(id => users.find(u => Number(u.id) === Number(id)));
+                                            const involvedNames = involvedList.map(u => u?.name).filter(Boolean).join(', ');
+                                            const perPersonAmt = e.amount / (e.involved?.length || 1);
+                                            const perPersonAmtStr = e.curr === 'JPY' ? `¥${Math.round(perPersonAmt).toLocaleString()}` : `NT$${Math.round(perPersonAmt).toLocaleString()}`;
+                                            splitText = <>
+                                                <div>分攤名單: {involvedNames || '無'}</div>
+                                                <div className="text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded inline-block mt-0.5">每人: {perPersonAmtStr}</div>
+                                            </>;
+                                        }
+                                    }
+
+                                    return (
+                                        <div key={e.id} className={`bg-white p-4 rounded-2xl shadow-sm border ${editingId === e.id ? 'border-orange-400 ring-1 ring-orange-400' : 'border-slate-50'} flex justify-between items-start animate-in slide-in-from-left-2 duration-300`}>
+                                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                                                <div className="text-xl bg-slate-50 w-10 h-10 flex items-center justify-center rounded-full border border-slate-100 shrink-0">{CATEGORIES.find(c=>c.key===e.cat)?.icon || '📦'}</div>
+                                                <div className="flex-1 truncate">
+                                                    <div className="font-bold text-slate-800 text-sm truncate">{e.name}</div>
+                                                    <div className="text-[10px] text-slate-400 leading-relaxed mt-0.5">
+                                                        {activeTab==='public' ? (
+                                                            <div className="space-y-0.5">
+                                                                <div><span className="font-bold text-sky-600">{payer?.name || '成員'} 墊款</span></div>
+                                                                {splitText}
+                                                            </div>
+                                                        ) : (e.payMethod==='cash'?'現金':'信用卡')}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="text-right ml-2 flex-shrink-0">
+                                                <div className="font-mono font-black text-slate-900">{originalAmtStr}</div>
+                                                <div className="flex gap-2 justify-end mt-1">
+                                                    <button onClick={()=>startEdit(e)} className="text-[10px] text-sky-500 font-bold hover:underline">編輯</button>
+                                                    <button onClick={()=>deleteExpense(e.id, activeTab==='personal'?'personal':'shared')} className="text-[10px] text-red-300 font-bold hover:text-red-500">刪除</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="space-y-4 animate-in fade-in duration-300">
+                             <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+                                <div className="p-5 bg-slate-900 text-white font-black text-xs uppercase tracking-widest text-center flex justify-between items-center shadow-lg">
+                                    <span>公費結算對帳 ({currency})</span>
+                                    {isSyncing && <div className="loader-mini !border-white !border-t-transparent"></div>}
+                                </div>
+                                <div className="p-6 space-y-4">
+                                    {settlements.length === 0 ? ( <div className="text-center py-12 text-slate-400 text-sm italic font-bold">目前帳目已平！</div> ) : (
+                                        settlements.map((s, i) => (
+                                            <div key={i} className="flex items-center justify-between p-5 rounded-2xl bg-slate-50 border border-slate-100 shadow-sm transition-all hover:scale-[1.02]">
+                                                <div className="text-xs text-slate-800">
+                                                    <span className="text-red-500 font-black bg-red-50 px-2 py-1 rounded-lg border border-red-100">{s.from}</span>
+                                                    <span className="mx-3 text-slate-300 font-bold text-lg">➔</span>
+                                                    <span className="text-emerald-600 font-black bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">{s.to}</span>
+                                                </div>
+                                                <div className="font-mono font-black text-xl text-slate-900">{format(s.amt, 'JPY')}</div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+        const root = ReactDOM.createRoot(document.getElementById('budget-root'));
+        root.render(<BillSplitter />);
+    </script>
+</body>
+</html>
