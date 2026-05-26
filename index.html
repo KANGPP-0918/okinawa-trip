@@ -11,7 +11,7 @@
     <link rel="apple-touch-icon" href="https://img.icons8.com/color/96/shisa.png">
     <link rel="icon" type="image/png" href="https://img.icons8.com/color/96/shisa.png">
 
-    <title>沖繩自駕 5天4夜 (雲端同步版)</title>
+    <title>沖繩自駕 5天4夜 (全雲端同步版)</title>
 
     <!-- 外部資源 -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -123,6 +123,10 @@
         .scrollbar-hide::-webkit-scrollbar { display: none; }
 
         .sos-btn { display: flex; align-items: center; justify-content: space-between; background: #FFF3E0; color: #E65100; padding: 12px 16px; border-radius: 12px; text-decoration: none; margin-bottom: 8px; font-weight: 700; font-size: 14px; border: 1px solid #FFE0B2; }
+        
+        /* 拖曳時的視覺效果 */
+        .dragging { opacity: 0.5; border: 2px dashed var(--primary-color); }
+        .drag-over { border-top: 3px solid var(--primary-color); margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -168,6 +172,7 @@
     </nav>
 
     <main>
+        <!-- 首頁 -->
         <section id="view-home" class="view-section active">
             <h2 class="section-title">💴 即時匯率 (JPY ↔ TWD)</h2>
             <div class="card-custom">
@@ -192,11 +197,11 @@
                 <div class="py-5 text-center w-full text-slate-400 text-sm">載入天氣中...</div>
             </div>
 
-            <h2 class="section-title">🇯🇵 VJW 入境 QR Code</h2>
+            <h2 class="section-title">🇯🇵 VJW 入境 QR Code (私人同步)</h2>
             <div class="card-custom text-center">
                 <div id="vjw-container" class="min-h-[150px] flex items-center justify-center border-2 border-dashed border-slate-200 rounded-xl mb-3 cursor-pointer hover:border-sky-300 transition-colors" onclick="document.getElementById('vjw-upload').click()">
                     <img id="vjw-img" class="hidden max-w-full max-h-[250px] rounded-lg shadow-sm">
-                    <div id="vjw-placeholder" class="text-slate-400 text-sm italic">點擊上傳 QR Code 截圖 (存於本機)</div>
+                    <div id="vjw-placeholder" class="text-slate-400 text-sm italic">點擊上傳 QR Code 截圖<br>(將安全儲存於私人雲端)</div>
                 </div>
                 <input type="file" id="vjw-upload" hidden accept="image/*" onchange="window.handleImage(this, 'vjw-img')">
                 <button class="btn-okinawa shadow-sm" onclick="window.open('https://vjw-lp.digital.go.jp/zh-hant/')">前往 VJW 官網</button>
@@ -212,25 +217,32 @@
 
         <!-- 機票 -->
         <section id="view-flights" class="view-section">
-            <h2 class="section-title">✈️ 我的航班資訊 (本機)</h2>
+            <h2 class="section-title">✈️ 我的航班資訊 (私人同步)</h2>
             <div id="flight-content"></div>
         </section>
 
         <!-- 行程 -->
         <section id="view-itinerary" class="view-section">
-            <div class="sticky top-[60px] bg-white/80 backdrop-blur-md z-[50] py-2 -mx-5 px-5 border-b border-slate-100 mb-4">
+            <div class="sticky top-[60px] bg-white/80 backdrop-blur-md z-[50] py-2 -mx-5 px-5 border-b border-slate-100 mb-4 flex justify-between items-center">
                 <div id="day-tabs" class="flex gap-2 overflow-x-auto scrollbar-hide" id="day-tabs"></div>
+                <!-- 排序按鈕已移走 -->
             </div>
 
             <!-- 內嵌式新增行程 -->
             <div class="card-custom mb-6 border-2 border-dashed border-sky-200 bg-sky-50/20">
-                <div class="text-xs font-bold mb-3 text-sky-700">快速新增景點</div>
+                <div class="text-xs font-bold mb-3 text-sky-700">快速新增景點 (共用雲端)</div>
                 <div class="grid grid-cols-3 gap-2 mb-2">
-                    <input type="time" id="inline-trip-time" class="p-2 border border-slate-200 rounded-lg outline-none text-xs">
-                    <input type="text" id="inline-trip-name" class="col-span-2 p-2 border border-slate-200 rounded-lg outline-none text-xs" placeholder="景點名稱">
+                    <!-- 時間改為非必填 -->
+                    <input type="time" id="inline-trip-time" class="p-2 border border-slate-200 rounded-lg outline-none text-xs" placeholder="時間(選填)">
+                    <input type="text" id="inline-trip-name" class="col-span-2 p-2 border border-slate-200 rounded-lg outline-none text-xs" placeholder="景點名稱 (必填)">
                 </div>
                 <input type="text" id="inline-trip-note" class="w-full p-2 border border-slate-200 rounded-lg outline-none text-xs mb-3" placeholder="備註 / Mapcode">
-                <button class="w-full py-2 bg-sky-600 text-white rounded-lg font-bold text-xs shadow-sm" onclick="window.saveTripInline()">儲存至雲端</button>
+                
+                <div class="flex gap-2">
+                    <button class="flex-[2] py-2 bg-sky-600 text-white rounded-lg font-bold text-xs shadow-sm" onclick="window.saveTripInline()">新增至行程</button>
+                    <!-- 時間排序按鈕移動到這裡 -->
+                    <button class="flex-1 py-2 bg-slate-100 text-slate-500 rounded-lg font-bold text-xs shadow-sm border border-slate-200" onclick="window.sortCurrentDay()">🔄 時間排序</button>
+                </div>
             </div>
 
             <div id="day-content"></div>
@@ -244,7 +256,7 @@
         <!-- 清單 -->
         <section id="view-checklist" class="view-section">
             <div class="flex justify-between items-center mb-2">
-                <h2 class="section-title">✅ 沖繩行前清單 (本機)</h2>
+                <h2 class="section-title">✅ 行前清單 (私人同步)</h2>
                 <button id="todo-toggle-all" class="text-[10px] bg-sky-600 text-white px-3 py-1.5 rounded-full font-bold mt-4" onclick="window.toggleAllTodos()">一鍵全選</button>
             </div>
             <div class="card-custom">
@@ -269,32 +281,52 @@
         </div>
     </div>
 
-    <script>
-        // 初始化狀態
-        window.state = {
-            itinerary: [],
-            todos: [],
-            flights: {
-                passenger: "", ticket: "", ref: "",
-                outbound: { date: "", dep: "", depT: "", arr: "", arrT: "", depTime: "", arrTime: "", dur: "", no: "", air: "", cls: "", bag: "", w: "" },
-                inbound: { date: "", dep: "", depT: "", arr: "", arrT: "", depTime: "", arrTime: "", dur: "", no: "", air: "", cls: "", bag: "", w: "" }
-            },
-            currentDay: 0,
-            rate: 0.215,
-            theme: 'light'
-        };
-    </script>
+    <!-- 編輯行程 Modal -->
+    <div class="modal" id="modal-trip-edit">
+        <div class="modal-content">
+            <h3 class="text-lg font-bold mb-4 text-slate-800">編輯行程資訊</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-[10px] text-slate-400 font-bold">時間 (選填)</label>
+                    <input type="time" id="edit-trip-time" class="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400">
+                </div>
+                <div>
+                    <label class="text-[10px] text-slate-400 font-bold">景點名稱 (必填)</label>
+                    <input type="text" id="edit-trip-name" class="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400">
+                </div>
+                <div>
+                    <label class="text-[10px] text-slate-400 font-bold">備註 / Mapcode</label>
+                    <input type="text" id="edit-trip-note" class="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400">
+                </div>
+            </div>
+            <div class="flex gap-2 pt-4">
+                <button class="flex-1 p-3 bg-slate-100 text-slate-600 rounded-xl font-bold" onclick="window.closeModal()">取消</button>
+                <button class="flex-1 p-3 bg-sky-600 text-white rounded-xl font-bold shadow-sm" onclick="window.saveTripEdit()">儲存</button>
+            </div>
+        </div>
+    </div>
 
-    <!-- Firebase 與核心邏輯模組 -->
+    <!-- JavaScript 核心邏輯 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ==========================================
-        // --- 雲端設定專區 ---
-        // ==========================================
-        const myManualConfig = {
+        // 初始化狀態 (加上QR欄位預設)
+        window.state = {
+            itinerary: [],
+            todos: [{ text: "護照與駕照譯本", done: false }],
+            flights: {
+                passenger: "", ticket: "", ref: "",
+                outbound: { date: "", dep: "", depT: "", arr: "", arrT: "", depTime: "", arrTime: "", dur: "", no: "", air: "", cls: "", bag: "", w: "", qr: "" },
+                inbound: { date: "", dep: "", depT: "", arr: "", arrT: "", depTime: "", arrTime: "", dur: "", no: "", air: "", cls: "", bag: "", w: "", qr: "" }
+            },
+            currentDay: 0,
+            rate: 0.215,
+            theme: 'light'
+        };
+
+        const manualConfig = {
           apiKey: "AIzaSyBcrJKHsT-DCqkO1TOVAyFu5UwnKWhEsr8",
           authDomain: "okinawa-c5162.firebaseapp.com",
           projectId: "okinawa-c5162",
@@ -304,17 +336,9 @@
           measurementId: "G-ZFYN419E2G"
         };
 
-        const myManualAppId = "okinawa-trip-v1";
-
-        let firebaseConfig = myManualConfig;
-        try { 
-            if (typeof __firebase_config !== 'undefined') {
-                const envConfig = JSON.parse(__firebase_config); 
-                if (envConfig.apiKey) firebaseConfig = envConfig;
-            }
-        } catch(e) {}
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : manualConfig;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : "okinawa-trip-v1";
         
-        const appId = typeof __app_id !== 'undefined' ? __app_id : myManualAppId;
         const app = firebaseConfig.apiKey ? initializeApp(firebaseConfig) : null;
         const auth = app ? getAuth(app) : null;
         const db = app ? getFirestore(app) : null;
@@ -338,20 +362,34 @@
         };
 
         window.saveTripInline = () => {
-            const time = document.getElementById('inline-trip-time').value;
+            const time = document.getElementById('inline-trip-time').value; // 時間可以為空
             const name = document.getElementById('inline-trip-name').value;
             const note = document.getElementById('inline-trip-note').value;
-            if(!name || !time) return;
+            
+            if(!name) return; // 只有景點名稱是必填
+            
             if(!window.state.itinerary[window.state.currentDay]) {
                 window.state.itinerary[window.state.currentDay] = { day: window.state.currentDay + 1, items: [] };
             }
             window.state.itinerary[window.state.currentDay].items.push({
-                name, time, note, query: name, subItems: []
+                name, time: time || '', note, query: name, subItems: []
             });
-            window.saveToCloud();
+            window.sortCurrentDay(); // 新增時自動排序並存入雲端
             document.getElementById('inline-trip-time').value = '';
             document.getElementById('inline-trip-name').value = '';
             document.getElementById('inline-trip-note').value = '';
+        };
+
+        window.sortCurrentDay = () => {
+            if(window.state.itinerary[window.state.currentDay] && window.state.itinerary[window.state.currentDay].items) {
+                window.state.itinerary[window.state.currentDay].items.sort((a,b) => {
+                    const timeA = a.time || '24:00'; // 沒時間的排到最後
+                    const timeB = b.time || '24:00';
+                    return timeA.localeCompare(timeB);
+                });
+                window.saveToCloud();
+                window.renderItinerary();
+            }
         };
 
         window.addSubTrip = (dI, iI) => {
@@ -386,25 +424,71 @@
 
         window.closeModal = () => document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
 
+        // 拖曳排序相關函數
+        window.draggedTripIndex = null;
+        window.handleDragStart = (e, idx) => {
+            window.draggedTripIndex = idx;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        };
+        window.handleDragOver = (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        };
+        window.handleDragEnter = (e, idx) => {
+            e.preventDefault();
+            const card = e.currentTarget;
+            if (window.draggedTripIndex !== null && window.draggedTripIndex !== idx) {
+                card.classList.add('drag-over');
+            }
+        };
+        window.handleDragLeave = (e) => {
+            e.currentTarget.classList.remove('drag-over');
+        };
+        window.handleDrop = (e, targetIdx) => {
+            e.stopPropagation();
+            e.currentTarget.classList.remove('drag-over');
+            const srcIdx = window.draggedTripIndex;
+            if (srcIdx !== null && srcIdx !== targetIdx) {
+                const dayItems = window.state.itinerary[window.state.currentDay].items;
+                const [draggedItem] = dayItems.splice(srcIdx, 1);
+                dayItems.splice(targetIdx, 0, draggedItem);
+                window.saveToCloud();
+                window.renderItinerary();
+            }
+            window.draggedTripIndex = null;
+            return false;
+        };
+        window.handleDragEnd = (e) => {
+            e.target.classList.remove('dragging');
+            document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            window.draggedTripIndex = null;
+        };
+
         window.renderItinerary = function() {
             const tabs = document.getElementById('day-tabs');
             const content = document.getElementById('day-content');
             if (!tabs || !content) return;
             tabs.innerHTML = '';
-            const data = window.state.itinerary.length > 0 ? window.state.itinerary : [
-                {day:1, items:[]},{day:2, items:[]},{day:3, items:[]},{day:4, items:[]},{day:5, items:[]}
-            ];
-            data.forEach((day, idx) => {
+            
+            // 防呆補齊天數至5天
+            while(window.state.itinerary.length < 5) {
+                window.state.itinerary.push({ day: window.state.itinerary.length + 1, items: [] });
+            }
+            
+            const dateMap = ['07/24', '07/25', '07/26', '07/27', '07/28'];
+            window.state.itinerary.forEach((day, idx) => {
                 const btn = document.createElement('button');
                 btn.className = `tab-btn ${window.state.currentDay === idx ? 'active' : ''}`;
-                btn.innerText = `Day ${day.day}`;
+                btn.innerText = `Day ${idx + 1} (${dateMap[idx] || ''})`;
                 btn.onclick = () => { window.state.currentDay = idx; window.renderItinerary(); };
                 tabs.appendChild(btn);
             });
-            const currentDay = data[window.state.currentDay];
+            const currentDay = window.state.itinerary[window.state.currentDay];
             if(!currentDay) return;
             
-            content.innerHTML = (currentDay.items || []).sort((a,b)=>a.time.localeCompare(b.time)).map((item, idx) => {
+            content.innerHTML = (currentDay.items || []).map((item, idx) => {
                 const subs = (item.subItems || []).map((sub, sIdx) => {
                     const name = typeof sub === 'object' ? sub.text : sub;
                     const note = typeof sub === 'object' ? sub.note : "";
@@ -424,11 +508,20 @@
                 }).join('');
 
                 return `
-                <div class="card-custom mb-4 shadow-sm border border-slate-50 relative">
+                <div class="card-custom mb-4 shadow-sm border border-slate-50 relative transition-all"
+                     draggable="true"
+                     ondragstart="window.handleDragStart(event, ${idx})"
+                     ondragover="window.handleDragOver(event)"
+                     ondragenter="window.handleDragEnter(event, ${idx})"
+                     ondragleave="window.handleDragLeave(event)"
+                     ondrop="window.handleDrop(event, ${idx})"
+                     ondragend="window.handleDragEnd(event)">
+                    <div class="absolute left-1 top-1/2 -translate-y-1/2 cursor-grab text-slate-300 p-2 hover:text-slate-500 active:cursor-grabbing" title="拖曳排序" style="touch-action: none;">≡</div>
+                    <button class="absolute top-2 right-10 p-1 text-slate-300 hover:text-sky-500 transition-colors" onclick="window.openTripEdit(${idx})" title="編輯行程">✏️</button>
                     <button class="btn-delete" onclick="window.deleteTrip(${idx})">×</button>
-                    <div class="flex items-start gap-3">
+                    <div class="flex items-start gap-3 ml-6">
                         <div class="flex-1">
-                            <span class="time-tag text-sky-600 font-bold">${item.time}</span>
+                            ${item.time ? `<span class="time-tag text-sky-600 font-bold">${item.time}</span>` : ''}
                             <div class="location-name font-black text-slate-800">${item.name}</div>
                             <div class="highlight text-xs text-slate-400 italic mb-2">${item.note}</div>
                             <div class="mt-3 space-y-1.5 border-l-2 border-sky-100 pl-3">
@@ -469,7 +562,8 @@
         window.toggleAllTodos = () => {
             const allDone = window.state.todos.every(t => t.done);
             window.state.todos.forEach(t => t.done = !allDone);
-            window.saveLocal(); window.renderTodos();
+            window.savePrivateCloud(); 
+            window.renderTodos();
         };
 
         window.renderFlights = function() {
@@ -490,6 +584,15 @@
                         <span class="bg-slate-50 text-slate-400 text-[10px] px-2 py-1 rounded font-black border border-slate-100">${data.no || '航班號'}</span>
                         <span class="bg-slate-50 text-slate-400 text-[10px] px-2 py-1 rounded font-black border border-slate-100">${data.air || '航空公司'}</span>
                     </div>
+                    
+                    <!-- 新增的 QR Code 區塊 -->
+                    <div class="mt-4 border-t border-slate-50 pt-4">
+                        <div class="text-[10px] text-slate-400 font-bold mb-2 uppercase">登機 QR Code (私人同步)</div>
+                        <div class="min-h-[80px] flex items-center justify-center border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-sky-300 transition-colors bg-slate-50 overflow-hidden" onclick="document.getElementById('qr-upload-${type}').click()">
+                            ${data.qr ? '<img src="' + data.qr + '" class="w-full max-h-[250px] object-contain">' : '<div class="text-slate-400 text-xs italic p-4 text-center">點擊上傳登機證 QR Code</div>'}
+                        </div>
+                        <input type="file" id="qr-upload-${type}" hidden accept="image/*" onchange="window.handleFlightQr(this, '${type}')">
+                    </div>
                 </div>`;
             container.innerHTML = `
                 <div class="bg-teal-600 rounded-2xl p-6 text-white mb-4 shadow-lg relative overflow-hidden">
@@ -506,6 +609,7 @@
             window.renderItinerary(); window.renderTodos(); window.renderFlights();
         };
 
+        // 共用雲端：行程
         window.saveToCloud = async () => {
             if (!auth || !auth.currentUser) return;
             updateSyncUI('syncing');
@@ -519,43 +623,89 @@
             }
         };
 
+        // 私人雲端
+        window.savePrivateCloud = async () => {
+            if (!auth || !auth.currentUser) return;
+            const uid = auth.currentUser.uid;
+            const docRef = doc(db, 'artifacts', appId, 'users', uid, 'private_data', 'master');
+            try {
+                const vjwImg = document.getElementById('vjw-img').src;
+                const vjwToSave = vjwImg.startsWith('data:image') ? vjwImg : null;
+                await setDoc(docRef, { 
+                    todos: window.state.todos,
+                    flights: window.state.flights,
+                    vjw: vjwToSave
+                }, { merge: true });
+            } catch(e) { console.error("Private save error", e); }
+        };
+
         function setupSync() {
             if (!auth || !auth.currentUser) {
                 updateSyncUI('local');
                 return;
             }
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'trip_data', 'master');
-            onSnapshot(docRef, (snap) => {
+            // 監聽公用資料 (行程)
+            const publicRef = doc(db, 'artifacts', appId, 'public', 'data', 'trip_data', 'master');
+            onSnapshot(publicRef, (snap) => {
                 updateSyncUI('connected');
                 if (snap.exists()) {
                     window.state.itinerary = snap.data().itinerary || [];
                     window.renderItinerary();
-                } else window.saveToCloud();
+                } else {
+                    window.saveToCloud();
+                }
             }, (err) => {
                 console.error("Firebase error", err);
                 updateSyncUI('local');
             });
+
+            // 監聽私人資料 (機票、清單、圖片)
+            const privateRef = doc(db, 'artifacts', appId, 'users', auth.currentUser.uid, 'private_data', 'master');
+            onSnapshot(privateRef, (snap) => {
+                if (snap.exists()) {
+                    const data = snap.data();
+                    if (data.todos) { window.state.todos = data.todos; window.renderTodos(); }
+                    if (data.flights) { window.state.flights = data.flights; window.renderFlights(); }
+                    if (data.vjw) {
+                        const img = document.getElementById('vjw-img');
+                        img.src = data.vjw; 
+                        img.classList.remove('hidden'); 
+                        document.getElementById('vjw-placeholder').classList.add('hidden'); 
+                    }
+                }
+            }, (err) => console.error("Private Firebase error", err));
         }
 
-        window.saveLocal = () => {
-            localStorage.setItem('okinawa_todos', JSON.stringify(window.state.todos));
-            localStorage.setItem('okinawa_flights', JSON.stringify(window.state.flights));
+        window.editingTripIndex = null;
+        window.openTripEdit = (idx) => {
+            window.editingTripIndex = idx;
+            const item = window.state.itinerary[window.state.currentDay].items[idx];
+            document.getElementById('edit-trip-time').value = item.time || '';
+            document.getElementById('edit-trip-name').value = item.name || '';
+            document.getElementById('edit-trip-note').value = item.note || '';
+            document.getElementById('modal-trip-edit').classList.add('active');
         };
 
-        function loadLocalData() {
-            try {
-                const todos = localStorage.getItem('okinawa_todos');
-                window.state.todos = todos ? JSON.parse(todos) : [{ text: "護照與駕照譯本", done: false }];
-                const flights = localStorage.getItem('okinawa_flights');
-                if(flights) window.state.flights = JSON.parse(flights);
-                const vjw = localStorage.getItem('okinawa_vjw_img');
-                if(vjw) {
-                    const img = document.getElementById('vjw-img');
-                    img.src = vjw; img.classList.remove('hidden'); 
-                    document.getElementById('vjw-placeholder').classList.add('hidden'); 
-                }
-            } catch(e) {}
-        }
+        window.saveTripEdit = () => {
+            if (window.editingTripIndex === null) return;
+            const idx = window.editingTripIndex;
+            const time = document.getElementById('edit-trip-time').value;
+            const name = document.getElementById('edit-trip-name').value;
+            const note = document.getElementById('edit-trip-note').value;
+            
+            if(!name) return; // 只有名稱是必填，時間可以為空
+            
+            const item = window.state.itinerary[window.state.currentDay].items[idx];
+            item.time = time || '';
+            item.name = name;
+            item.note = note;
+            item.query = name; 
+            
+            window.saveToCloud();
+            window.renderItinerary();
+            window.closeModal();
+            window.editingTripIndex = null;
+        };
 
         window.deleteTrip = (idx) => { window.state.itinerary[window.state.currentDay].items.splice(idx, 1); window.saveToCloud(); };
         window.deleteSubTrip = (dI, iI, sI) => { window.state.itinerary[dI].items[iI].subItems.splice(sI, 1); window.saveToCloud(); };
@@ -563,11 +713,11 @@
             const v = document.getElementById('todo-input').value;
             if(!v) return;
             window.state.todos.push({text:v, done:false});
-            window.saveLocal(); window.renderTodos();
+            window.savePrivateCloud(); window.renderTodos();
             document.getElementById('todo-input').value = '';
         };
-        window.toggleTodo = (i) => { window.state.todos[i].done = !window.state.todos[i].done; window.saveLocal(); window.renderTodos(); };
-        window.deleteTodo = (i) => { window.state.todos.splice(i,1); window.saveLocal(); window.renderTodos(); };
+        window.toggleTodo = (i) => { window.state.todos[i].done = !window.state.todos[i].done; window.savePrivateCloud(); window.renderTodos(); };
+        window.deleteTodo = (i) => { window.state.todos.splice(i,1); window.savePrivateCloud(); window.renderTodos(); };
 
         window.openFlightEdit = (target) => {
             const fields = document.getElementById('flight-edit-fields');
@@ -599,15 +749,28 @@
                 f[target].date = document.getElementById('edit-date').value; f[target].depTime = document.getElementById('edit-depTime').value; f[target].arrTime = document.getElementById('edit-arrTime').value;
                 f[target].dep = document.getElementById('edit-dep').value; f[target].arr = document.getElementById('edit-arr').value; f[target].no = document.getElementById('edit-no').value;
             }
-            window.saveLocal(); window.renderFlights(); window.closeModal();
+            window.savePrivateCloud(); window.renderFlights(); window.closeModal();
         };
 
+        // VJW 截圖上傳
         window.handleImage = (input, id) => {
             const f = input.files[0]; if(!f) return;
+            if(f.size > 500000) alert("圖片過大可能無法上傳雲端，請盡量裁切！");
             const r = new FileReader(); r.onload = (e) => {
                 const img = document.getElementById(id); img.src = e.target.result;
                 img.classList.remove('hidden'); document.getElementById('vjw-placeholder').classList.add('hidden');
-                localStorage.setItem('okinawa_vjw_img', e.target.result);
+                window.savePrivateCloud();
+            }; r.readAsDataURL(f);
+        };
+        
+        // 機票 QR Code 上傳
+        window.handleFlightQr = (input, type) => {
+            const f = input.files[0]; if(!f) return;
+            if(f.size > 500000) alert("圖片過大可能無法上傳雲端，請盡量裁切 QR Code 部分！");
+            const r = new FileReader(); r.onload = (e) => {
+                window.state.flights[type].qr = e.target.result;
+                window.savePrivateCloud();
+                window.renderFlights();
             }; r.readAsDataURL(f);
         };
 
@@ -645,7 +808,6 @@
         };
 
         window.init = async function() {
-            loadLocalData(); 
             window.renderAll(); 
             window.fetchRate(); 
             window.fetchWeather(); 
@@ -658,14 +820,24 @@
             }
 
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
-                else await signInAnonymously(auth);
-                onAuthStateChanged(auth, (u) => { if (u) { updateSyncUI('connected'); setupSync(); } });
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                onAuthStateChanged(auth, (u) => { 
+                    if (u) { 
+                        updateSyncUI('connected'); 
+                        setupSync(); 
+                    } 
+                });
             } catch (e) {
                 console.error("Auth init failed", e);
                 updateSyncUI('local');
             }
         };
+        
         window.init();
     </script>
 
@@ -691,41 +863,72 @@
             const [users, setUsers] = useState([{ id: 1, name: '成員 1' }, { id: 2, name: '成員 2' }, { id: 3, name: '成員 3' }, { id: 4, name: '成員 4' }]);
             const [publicExpenses, setPublicExpenses] = useState([]);
             const [personalExpenses, setPersonalExpenses] = useState([]);
-            const [newExpForm, setNewExpForm] = useState({ name: '', amount: '', curr: 'JPY', cat: 'food', payMethod: 'cash', payerId: 1, involved: [1,2,3,4] });
+            const [newExpForm, setNewExpForm] = useState({ 
+                name: '', amount: '', curr: 'JPY', cat: 'food', payMethod: 'cash', 
+                payerId: 1, involved: [1,2,3,4], splitMode: 'equal', customAmounts: {} 
+            });
 
             useEffect(() => {
                 const handleRateUpdate = (e) => setLiveRate(e.detail);
                 window.addEventListener('rateUpdated', handleRateUpdate);
+                
                 const fb = window.firebase || {};
                 if(fb.auth) fb.auth.onAuthStateChanged(setUser);
-                const savedLocal = localStorage.getItem('okinawa_personal_budget');
-                if (savedLocal) { try { setPersonalExpenses(JSON.parse(savedLocal)); } catch(e) {} }
+                
                 return () => window.removeEventListener('rateUpdated', handleRateUpdate);
             }, []);
 
             useEffect(() => {
                 const fb = window.firebase || {};
                 if (!user || !fb.db || !fb.appId) return;
-                const docRef = fb.doc(fb.db, 'artifacts', fb.appId, 'public', 'data', 'bill_splitter', 'data');
-                const unsubscribe = fb.onSnapshot(docRef, (snap) => {
+
+                const publicRef = fb.doc(fb.db, 'artifacts', fb.appId, 'public', 'data', 'bill_splitter', 'data');
+                const unsubPublic = fb.onSnapshot(publicRef, (snap) => {
                     if (snap.exists()) {
                         const data = snap.data();
                         if (data.users) setUsers(data.users);
                         if (data.publicExpenses) {
-                            setPublicExpenses(data.publicExpenses.map(e => ({...e, payerId: Number(e.payerId), involved: (e.involved || []).map(id => Number(id))})));
+                            setPublicExpenses(data.publicExpenses.map(e => ({
+                                ...e, 
+                                payerId: Number(e.payerId), 
+                                involved: (e.involved || []).map(id => Number(id)),
+                                splitMode: e.splitMode || 'equal',
+                                customAmounts: e.customAmounts || {}
+                            })));
                         }
                     }
-                }, (err) => console.error("React sync error", err));
-                return () => unsubscribe();
+                }, (err) => console.error("React public sync error", err));
+
+                const privateRef = fb.doc(fb.db, 'artifacts', fb.appId, 'users', user.uid, 'bill_splitter', 'personal');
+                const unsubPrivate = fb.onSnapshot(privateRef, (snap) => {
+                    if (snap.exists() && snap.data().expenses) {
+                        setPersonalExpenses(snap.data().expenses);
+                    }
+                }, (err) => console.error("React private sync error", err));
+
+                return () => {
+                    unsubPublic();
+                    unsubPrivate();
+                };
             }, [user]);
 
-            const saveCloudData = async (u, e) => {
+            const savePublicCloudData = async (u, e) => {
                 const fb = window.firebase || {};
                 if (!user || !fb.db) return;
                 setIsSyncing(true);
                 try {
                     const docRef = fb.doc(fb.db, 'artifacts', fb.appId, 'public', 'data', 'bill_splitter', 'data');
-                    await fb.setDoc(docRef, { users: u, publicExpenses: e });
+                    await fb.setDoc(docRef, { users: u, publicExpenses: e }, { merge: true });
+                } finally { setIsSyncing(false); }
+            };
+
+            const savePrivateCloudData = async (expenses) => {
+                const fb = window.firebase || {};
+                if (!user || !fb.db) return;
+                setIsSyncing(true);
+                try {
+                    const docRef = fb.doc(fb.db, 'artifacts', fb.appId, 'users', user.uid, 'bill_splitter', 'personal');
+                    await fb.setDoc(docRef, { expenses }, { merge: true });
                 } finally { setIsSyncing(false); }
             };
 
@@ -739,15 +942,31 @@
 
             const addExpense = (type) => {
                 if (!newExpForm.name || !newExpForm.amount) return;
-                const item = { id: editingId || Date.now(), name: newExpForm.name, amount: parseFloat(newExpForm.amount), curr: newExpForm.curr, cat: newExpForm.cat, payMethod: newExpForm.payMethod, splitType: type, payerId: Number(newExpForm.payerId), involved: type === 'shared' ? newExpForm.involved.map(id => Number(id)) : [1] };
+                const item = { 
+                    id: editingId || Date.now(), 
+                    name: newExpForm.name, 
+                    amount: parseFloat(newExpForm.amount), 
+                    curr: newExpForm.curr, 
+                    cat: newExpForm.cat, 
+                    payMethod: newExpForm.payMethod, 
+                    splitType: type, 
+                    payerId: Number(newExpForm.payerId), 
+                    involved: type === 'shared' ? newExpForm.involved.map(id => Number(id)) : [1],
+                    splitMode: newExpForm.splitMode,
+                    customAmounts: newExpForm.splitMode === 'custom' ? newExpForm.customAmounts : {}
+                };
+                
                 if (type === 'shared') { 
                     const updated = editingId ? publicExpenses.map(e => e.id === editingId ? item : e) : [item, ...publicExpenses];
-                    setPublicExpenses(updated); saveCloudData(users, updated); 
+                    setPublicExpenses(updated); 
+                    savePublicCloudData(users, updated); 
                 } else { 
                     const updated = editingId ? personalExpenses.map(e => e.id === editingId ? item : e) : [item, ...personalExpenses];
-                    localStorage.setItem('okinawa_personal_budget', JSON.stringify(updated)); setPersonalExpenses(updated); 
+                    setPersonalExpenses(updated); 
+                    savePrivateCloudData(updated); 
                 }
-                setNewExpForm({ ...newExpForm, name: '', amount: '' }); setEditingId(null);
+                setNewExpForm({ ...newExpForm, name: '', amount: '', splitMode: 'equal', customAmounts: {} }); 
+                setEditingId(null);
             };
 
             const handleNameChange = (id, newName) => {
@@ -755,7 +974,7 @@
             };
 
             const handleNameBlur = () => {
-                saveCloudData(users, publicExpenses);
+                savePublicCloudData(users, publicExpenses);
             };
 
             const startEdit = (e) => {
@@ -767,14 +986,24 @@
                     cat: e.cat,
                     payMethod: e.payMethod,
                     payerId: e.payerId,
-                    involved: e.involved || []
+                    involved: e.involved || [],
+                    splitMode: e.splitMode || 'equal',
+                    customAmounts: e.customAmounts || {}
                 });
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             };
 
             const deleteExpense = (id, type) => {
-                if (type === 'shared') { const updated = publicExpenses.filter(x => x.id !== id); setPublicExpenses(updated); saveCloudData(users, updated); }
-                else { const updated = personalExpenses.filter(x => x.id !== id); localStorage.setItem('okinawa_personal_budget', JSON.stringify(updated)); setPersonalExpenses(updated); }
+                if (type === 'shared') { 
+                    const updated = publicExpenses.filter(x => x.id !== id); 
+                    setPublicExpenses(updated); 
+                    savePublicCloudData(users, updated); 
+                }
+                else { 
+                    const updated = personalExpenses.filter(x => x.id !== id); 
+                    setPersonalExpenses(updated);
+                    savePrivateCloudData(updated);
+                }
                 if (editingId === id) setEditingId(null);
             };
 
@@ -783,29 +1012,23 @@
                 return list.reduce((s, e) => s + toJPY(e.amount, e.curr), 0);
             }, [personalExpenses, publicExpenses, activeTab, liveRate]);
 
-            const stats = useMemo(() => {
-                const list = activeTab === 'personal' ? personalExpenses : publicExpenses;
-                const group = {};
-                list.forEach(e => { group[e.cat] = (group[e.cat] || 0) + toJPY(e.amount, e.curr); });
-                let currentPos = 0;
-                return Object.entries(group).map(([key, val]) => {
-                    const cat = CATEGORIES.find(c => c.key === key) || CATEGORIES[5];
-                    const percent = (val / (currentTotal || 1)) * 100;
-                    const start = currentPos;
-                    currentPos += (percent / 100) * 360;
-                    return { ...cat, val, percent, start, end: currentPos };
-                });
-            }, [personalExpenses, publicExpenses, activeTab, currentTotal, liveRate]);
-
             const settlements = useMemo(() => {
                 let balances = {}; users.forEach(u => balances[Number(u.id)] = 0);
                 publicExpenses.forEach(e => {
                     const amt = toJPY(e.amount, e.curr);
                     const payerId = Number(e.payerId);
                     if (balances[payerId] !== undefined) balances[payerId] += amt;
-                    const involvedIds = (e.involved || []).map(id => Number(id));
-                    const share = amt / (involvedIds.length || 1);
-                    involvedIds.forEach(uid => { if(balances[uid] !== undefined) balances[uid] -= share; });
+                    
+                    if (e.splitMode === 'custom' && e.customAmounts) {
+                        Object.entries(e.customAmounts).forEach(([uid, shareAmt]) => {
+                            const jpyShare = toJPY(shareAmt || 0, e.curr);
+                            if (balances[Number(uid)] !== undefined) balances[Number(uid)] -= jpyShare;
+                        });
+                    } else {
+                        const involvedIds = (e.involved || []).map(id => Number(id));
+                        const share = amt / (involvedIds.length || 1);
+                        involvedIds.forEach(uid => { if(balances[uid] !== undefined) balances[uid] -= share; });
+                    }
                 });
                 let debtors = [], creditors = [];
                 Object.keys(balances).forEach(id => {
@@ -825,12 +1048,18 @@
                 return res;
             }, [publicExpenses, users, liveRate]);
 
+            // 計算自訂金額合計是否正確
+            const customTotal = useMemo(() => {
+                return Object.values(newExpForm.customAmounts || {}).reduce((s, val) => s + (parseFloat(val) || 0), 0);
+            }, [newExpForm.customAmounts]);
+            const isAmountMatch = Math.abs(customTotal - (parseFloat(newExpForm.amount) || 0)) < 1;
+
             return (
                 <div className="space-y-4 pb-10">
                     <div className="flex bg-sky-50 rounded-xl p-1 gap-1">
                         {['personal', 'public', 'settle'].map(t => (
                             <button key={t} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeTab===t ? 'bg-white text-sky-600 shadow-md' : 'text-sky-300'}`} onClick={()=>setActiveTab(t)}>
-                                {t==='personal'?'👤 個人':t==='public'?'👥 公費':'⚖️ 結算'}
+                                {t==='personal'?'👤 個人 (私人)':t==='public'?'👥 公費 (雲端)': '⚖️ 結算'}
                             </button>
                         ))}
                     </div>
@@ -870,16 +1099,26 @@
                                     <div className="flex bg-white rounded-xl border border-sky-400 overflow-hidden"><button className={`px-4 py-1 text-[10px] font-bold ${newExpForm.curr==='JPY'?'bg-sky-500 text-white':'text-sky-500'}`} onClick={()=>setNewExpForm({...newExpForm, curr:'JPY'})}>JPY</button><button className={`px-4 py-1 text-[10px] font-bold ${newExpForm.curr==='TWD'?'bg-sky-500 text-white':'text-sky-500'}`} onClick={()=>setNewExpForm({...newExpForm, curr:'TWD'})}>TWD</button></div>
                                 </div>
                                 {activeTab === 'public' && (
-                                    <div className="space-y-3">
+                                    <div className="space-y-3 pt-2">
                                         <div className="py-1"><label className="text-[10px] text-slate-400 block mb-2 font-bold px-1 uppercase">誰先墊款？</label>
                                             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                                                 {users.map(u => ( <button key={u.id} onClick={()=>setNewExpForm({...newExpForm, payerId: Number(u.id)})} className={`px-4 py-2 rounded-full text-xs font-bold border transition-all shadow-sm ${Number(newExpForm.payerId) === Number(u.id) ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200'}`}>{u.name}</button> ))}
                                             </div>
                                         </div>
-                                        <div className="py-1"><label className="text-[10px] text-slate-400 block mb-2 font-bold px-1 uppercase">哪些人要分攤？</label>
-                                            <div className="grid grid-cols-4 gap-2">
-                                                {users.map(u => ( 
-                                                    <button key={u.id} 
+                                        
+                                        <div className="py-1">
+                                            <div className="flex justify-between items-center mb-2 px-1">
+                                                <label className="text-[10px] text-slate-400 font-bold uppercase">分攤方式設定</label>
+                                                <div className="flex bg-slate-200 p-0.5 rounded-md">
+                                                    <button className={`px-3 py-1 text-[10px] font-bold rounded ${newExpForm.splitMode==='equal'?'bg-white text-slate-800 shadow-sm':'text-slate-500'}`} onClick={()=>setNewExpForm({...newExpForm, splitMode: 'equal'})}>均分</button>
+                                                    <button className={`px-3 py-1 text-[10px] font-bold rounded ${newExpForm.splitMode==='custom'?'bg-white text-slate-800 shadow-sm':'text-slate-500'}`} onClick={()=>setNewExpForm({...newExpForm, splitMode: 'custom'})}>自訂</button>
+                                                </div>
+                                            </div>
+
+                                            {newExpForm.splitMode === 'equal' ? (
+                                                <div className="grid grid-cols-4 gap-2">
+                                                    {users.map(u => ( 
+                                                        <button key={u.id} 
                                                             onClick={() => { 
                                                                 const uid = Number(u.id);
                                                                 const next = newExpForm.involved.includes(uid) 
@@ -888,41 +1127,70 @@
                                                                 if(next.length > 0) setNewExpForm({...newExpForm, involved: next}); 
                                                             }} 
                                                             className={`py-2 rounded-lg text-[10px] font-bold border transition-all ${newExpForm.involved.includes(Number(u.id)) ? 'bg-emerald-50 border-emerald-300 text-emerald-600 font-black' : 'bg-white border-slate-100 text-slate-300'}`}>
-                                                        {u.name}
-                                                    </button> 
-                                                ))}
-                                            </div>
+                                                            {u.name}
+                                                        </button> 
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-2 bg-white p-3 rounded-xl border border-slate-100">
+                                                    {users.map(u => (
+                                                        <div key={u.id} className="flex items-center gap-2">
+                                                            <span className="text-xs w-16 truncate font-bold text-slate-600">{u.name}</span>
+                                                            <input type="number" className="flex-1 p-2 border border-slate-200 rounded-lg text-xs outline-none focus:border-sky-400" placeholder={`自訂 ${newExpForm.curr} 金額`} 
+                                                                value={newExpForm.customAmounts[u.id] || ''} 
+                                                                onChange={(e) => setNewExpForm({...newExpForm, customAmounts: {...newExpForm.customAmounts, [u.id]: e.target.value === '' ? '' : parseFloat(e.target.value)}})} />
+                                                        </div>
+                                                    ))}
+                                                    <div className={`text-[10px] font-bold text-right mt-2 ${isAmountMatch ? 'text-emerald-500' : 'text-red-400'}`}>
+                                                        合計: {customTotal} / 總額: {newExpForm.amount || 0}
+                                                        {!isAmountMatch && ' (金額不符)'}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 )}
-                                <div className="grid grid-cols-3 gap-2"> {CATEGORIES.map(c => ( <button key={c.key} className={`flex flex-col items-center p-2.5 rounded-xl border transition-all ${newExpForm.cat===c.key ? 'bg-orange-50 border-orange-200' : 'bg-white border-slate-50'}`} onClick={()=>setNewExpForm({...newExpForm, cat:c.key})}> <span className="text-xl mb-1">{c.icon}</span> <span className={`text-[10px] ${newExpForm.cat===c.key?'text-orange-600 font-bold':'text-slate-400'}`}>{c.label}</span> </button> ))} </div>
+                                <div className="grid grid-cols-3 gap-2 mt-2"> {CATEGORIES.map(c => ( <button key={c.key} className={`flex flex-col items-center p-2.5 rounded-xl border transition-all ${newExpForm.cat===c.key ? 'bg-orange-50 border-orange-200' : 'bg-white border-slate-50'}`} onClick={()=>setNewExpForm({...newExpForm, cat:c.key})}> <span className="text-xl mb-1">{c.icon}</span> <span className={`text-[10px] ${newExpForm.cat===c.key?'text-orange-600 font-bold':'text-slate-400'}`}>{c.label}</span> </button> ))} </div>
                                 <div className="flex gap-2 mt-2">
-                                    {editingId && <button className="flex-1 bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-sm shadow-md active:scale-95 transition-all" onClick={() => { setEditingId(null); setNewExpForm({name:'', amount:'', curr:'JPY', cat:'food', payMethod:'cash', payerId:1, involved:[1,2,3,4]}); }}>取消</button>}
-                                    <button className="flex-[2] bg-slate-800 text-white py-3 rounded-xl font-bold text-sm shadow-xl active:scale-95 transition-all" onClick={() => addExpense(activeTab==='personal'?'personal':'shared')}>{editingId ? '更新這筆支出' : '確認新增'}</button>
+                                    {editingId && <button className="flex-1 bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-sm shadow-md active:scale-95 transition-all" onClick={() => { setEditingId(null); setNewExpForm({name:'', amount:'', curr:'JPY', cat:'food', payMethod:'cash', payerId:1, involved:[1,2,3,4], splitMode: 'equal', customAmounts:{}}); }}>取消</button>}
+                                    <button className="flex-[2] bg-slate-800 text-white py-3 rounded-xl font-bold text-sm shadow-xl active:scale-95 transition-all disabled:opacity-50" disabled={activeTab==='public' && newExpForm.splitMode==='custom' && !isAmountMatch} onClick={() => addExpense(activeTab==='personal'?'personal':'shared')}>{editingId ? '更新這筆支出' : '確認新增'}</button>
                                 </div>
                             </div>
                             <div className="space-y-2 mt-6">
                                 {(activeTab === 'personal' ? personalExpenses : publicExpenses).map(e => {
                                     const payer = users.find(u => Number(u.id) === Number(e.payerId));
-                                    const involvedList = (e.involved || []).map(id => users.find(u => Number(u.id) === Number(id)));
-                                    const involvedNames = involvedList.map(u => u?.name).filter(Boolean).join(', ');
-                                    const perPersonAmt = e.amount / (e.involved?.length || 1);
-                                    
-                                    // 保留原始記帳幣別的顯示字串
                                     const originalAmtStr = e.curr === 'JPY' ? `¥${Math.round(e.amount).toLocaleString()}` : `NT$${Math.round(e.amount).toLocaleString()}`;
-                                    const perPersonAmtStr = e.curr === 'JPY' ? `¥${Math.round(perPersonAmt).toLocaleString()}` : `NT$${Math.round(perPersonAmt).toLocaleString()}`;
+                                    
+                                    let splitText = '';
+                                    if (activeTab === 'public') {
+                                        if (e.splitMode === 'custom') {
+                                            const parts = Object.entries(e.customAmounts || {})
+                                                .filter(([uid, amt]) => amt > 0)
+                                                .map(([uid, amt]) => `${users.find(u => Number(u.id) === Number(uid))?.name || '未知'}: ${amt}`);
+                                            splitText = <div className="text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded inline-block">自訂分配: {parts.join(', ')}</div>;
+                                        } else {
+                                            const involvedList = (e.involved || []).map(id => users.find(u => Number(u.id) === Number(id)));
+                                            const involvedNames = involvedList.map(u => u?.name).filter(Boolean).join(', ');
+                                            const perPersonAmt = e.amount / (e.involved?.length || 1);
+                                            const perPersonAmtStr = e.curr === 'JPY' ? `¥${Math.round(perPersonAmt).toLocaleString()}` : `NT$${Math.round(perPersonAmt).toLocaleString()}`;
+                                            splitText = <>
+                                                <div>分攤名單: {involvedNames || '無'}</div>
+                                                <div className="text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded inline-block mt-0.5">每人: {perPersonAmtStr}</div>
+                                            </>;
+                                        }
+                                    }
 
                                     return (
                                         <div key={e.id} className={`bg-white p-4 rounded-2xl shadow-sm border ${editingId === e.id ? 'border-orange-400 ring-1 ring-orange-400' : 'border-slate-50'} flex justify-between items-start animate-in slide-in-from-left-2 duration-300`}>
                                             <div className="flex items-center gap-3 flex-1 min-w-0">
-                                                <div className="text-xl bg-slate-50 w-10 h-10 flex items-center justify-center rounded-full border border-slate-100">{CATEGORIES.find(c=>c.key===e.cat)?.icon || '📦'}</div>
+                                                <div className="text-xl bg-slate-50 w-10 h-10 flex items-center justify-center rounded-full border border-slate-100 shrink-0">{CATEGORIES.find(c=>c.key===e.cat)?.icon || '📦'}</div>
                                                 <div className="flex-1 truncate">
                                                     <div className="font-bold text-slate-800 text-sm truncate">{e.name}</div>
                                                     <div className="text-[10px] text-slate-400 leading-relaxed mt-0.5">
                                                         {activeTab==='public' ? (
                                                             <div className="space-y-0.5">
-                                                                <div><span className="font-bold text-sky-600">{payer?.name || '成員'} 墊款</span> · 分攤: {involvedNames || '無'}</div>
-                                                                <div className="text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded inline-block">每人: {perPersonAmtStr}</div>
+                                                                <div><span className="font-bold text-sky-600">{payer?.name || '成員'} 墊款</span></div>
+                                                                {splitText}
                                                             </div>
                                                         ) : (e.payMethod==='cash'?'現金':'信用卡')}
                                                     </div>
